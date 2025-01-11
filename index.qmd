@@ -4,4 +4,4 @@ title: "ISSS608"
 
 Welcome to **ISSS608 Visual Analytics & Applications**.
 
-![](images/DALL·E 2025-01-11 11.32.35 - A vibrant and colorful dashboard interface design with the title 'Visual Analytics with R' prominently displayed at the top. The interface includes a -01.jpeg)
+![](images/Screenshot 2025-01-11 140219.png)
