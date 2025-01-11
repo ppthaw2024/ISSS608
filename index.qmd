@@ -4,4 +4,4 @@ title: "ISSS608"
 
 Welcome to **ISSS608 Visual Analytics & Applications**.
 
-![](images/Screenshot 2025-01-11 140219.png)
+![](images/Screenshot%202025-01-11%20140219.png)
