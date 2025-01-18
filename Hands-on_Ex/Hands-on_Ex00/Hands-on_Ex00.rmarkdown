@@ -9,17 +9,25 @@ execute:
   freeze: true
 ---
 
+
+
 ## Getting started
 
 Loading tidyverse onto r environment by using the code chunk below.
+
+
 
 ```{r}
 pacman::p_load(tidyverse)
 ```
 
+
+
 ## Importing data
 
 Code chunk below uses read_csv() of readr to import REALIS2019.csv into r environment as a tbille data.frame.
+
+
 
 ```{r}
 realis2019 <- read_csv("data/REALIS2019.csv")
@@ -30,7 +38,11 @@ realis2019 <- read_csv("data/REALIS2019.csv")
 popdata_fat <- read_csv("data/PopData2019_fat.csv")
 ```
 
+
+
 ## Pivoting data
+
+
 
 ```{r}
 #|eval: FALSE
@@ -50,7 +62,11 @@ write_rds(popdata_long, "rds/popdata_long.rds")
 popdata_long <- read_rds("rds/popdata_long.rds")
 ```
 
+
+
 ## Working with dplyr
+
+
 
 ```{r}
 realis2019_selected <- realis2019 %>%
@@ -62,7 +78,11 @@ realis2019_selected <- realis2019 %>%
 realis2019_selected
 ```
 
+
+
 ## Working with filter() of dplyr.
+
+
 
 ```{r}
 realis2019_filtered <- realis2019_selected %>%
@@ -72,7 +92,11 @@ realis2019_filtered <- realis2019_selected %>%
   filter(`Unit Price ($ psm)` <= 13000)
 ```
 
+
+
 ### Putting all together
+
+
 
 ```{r}
 realis2019_end <- realis2019 %>%
@@ -86,3 +110,4 @@ realis2019_end <- realis2019 %>%
   filter(`Type of Sale` == "New Sale") %>%
   filter(`Unit Price ($ psm)` <= 13000)
 ```
+
