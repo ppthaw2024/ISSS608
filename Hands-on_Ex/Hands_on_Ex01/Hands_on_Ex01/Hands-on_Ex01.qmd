@@ -404,10 +404,7 @@ ggplot(data=exam_data,
 
 The *Coordinates* functions map the position of objects onto the plane of the plot. There are a number of different possible coordinate systems to use, they are:
 
-\- \[\`coord_cartesian()\`\]: the default cartesian coordinate systems, where you specify x and y values (e.g. allows you to zoom in or out).
-- \[\`coord_flip()\`\]: a cartesian system with the x and y flipped.
-- \[\`coord_fixed()\`\]: a cartesian system with a "fixed" aspect ratio (e.g. 1.78 for a "widescreen" plot).
-- \[\`coord_quickmap()\`\]: a coordinate system that approximates a good aspect ratio for maps.
+\- \[\`coord_cartesian()\`\]: the default cartesian coordinate systems, where you specify x and y values (e.g. allows you to zoom in or out). - \[\`coord_flip()\`\]: a cartesian system with the x and y flipped. - \[\`coord_fixed()\`\]: a cartesian system with a "fixed" aspect ratio (e.g. 1.78 for a "widescreen" plot). - \[\`coord_quickmap()\`\]: a coordinate system that approximates a good aspect ratio for maps.
 
 ### 1.10.1 Working with Coordinate
 
