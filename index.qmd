@@ -1,0 +1,9 @@
+---
+title: "ISSS608"
+editor_options: 
+  chunk_output_type: console
+---
+
+Welcome to **ISSS608 Visual Analytics & Applications**.
+
+![](images/Screenshot%202025-01-11%20140219.png)
