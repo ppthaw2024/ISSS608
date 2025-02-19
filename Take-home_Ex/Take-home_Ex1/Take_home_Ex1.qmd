@@ -231,9 +231,51 @@ marine_boxplot <- ggplot(marine_long, aes(x = Variable, y = Value, fill = Variab
 # Combine Ridge Plot and Boxplot
 marine_ridgeplot / marine_boxplot
 
+
 ```
 
-### EDA 2: Exploring Relationship between Speed and Engine Power
+**Insights**
+
+-   The data has been log-transformed, which suggests the original values had a skewed distribution (likely right-skewed).
+
+-   Efficiency_nm_per_kWh" and "Distance_Traveled_nm" have multiple red dots, indicating several outliers.
+
+-   "Revenue_per_Voyage_USD" and "Operational_Cost_USD" also have notable outliers, possibly reflecting extreme voyages or cost fluctuations.
+
+### EDA 2: Exploring the distribution of categorical variables
+
+```{r}
+
+
+# Convert categorical variables into long format
+marine_long <- marine %>%
+  select(Ship_Type, Route_Type, Engine_Type, Weather_Condition, Maintenance_Status) %>%
+  pivot_longer(cols = everything(), names_to = "Category", values_to = "Value")
+
+# Create horizontal bar charts with different colors for categories
+ggplot(marine_long, aes(y = Value, fill = Category)) +
+  geom_bar(color = "black") +  # Black outline for bars
+  facet_wrap(~Category, scales = "free_y") +  # Facet by category
+  labs(title = "Categorical Variable Distributions", x = "Count", y = "Categories") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 10))  
+
+
+```
+
+**Insights**
+
+-   The most common engine types are **Heavy Fuel Oil (HFO) and Diesel**, suggesting that most ships operate on these fuel sources.
+
+-   Most ships are **in Good or Fair maintenance condition**, with **fewer classified as Critical**.
+
+-   **Long-haul and Coastal routes** also have a significant presence.
+
+-   **Bulk Carrier, Container Ship, and Fish Carrier** are the most common ship types in the dataset.
+
+-   Since **most ships operate in calm or moderate weather**, it could suggest that voyages are planned around favorable conditions.
+
+### EDA 3: Exploring Relationship between Speed and Engine Power
 
 ```{r}
 # Load necessary libraries
@@ -273,7 +315,13 @@ speed_boxplot <- ggplot(marine, aes(x = Engine_Type, y = Speed_Over_Ground_knots
 speed_densityplot + speed_boxplot
 ```
 
-### EDA 3: Exploring Relationship between Efficiency Across Ship Type, Engine Type and Route Type
+**Insights**
+
+-   **Diesel and Heavy Fuel Oil (HFO)** engines have unimodal distributions, meaning ships with these engines tend to operate at a consistent range of speeds.
+-   **Steam Turbine:** The bimodal distribution (two peaks) suggests two common speed ranges. This could indicate different operating modes, such as low-speed cruising and high-speed transit.
+-   The median speed is similar across all engine types, around 17-18 knots. This suggests that regardless of engine type, ships tend to operate within a consistent speed range.
+
+### EDA 4: Exploring Relationship between Efficiency Across Ship Type, Engine Type and Route Type
 
 ::: panel-tabset
 ## Box Plot
@@ -336,44 +384,14 @@ boxplot_route <- plot_efficiency_boxplot("Route_Type")
 boxplot_ship / boxplot_engine / boxplot_route
 
 ```
-
-## 
 :::
 
-## Box Plot
+### EDA 5: Heatmap of Efficiency for different Ship_Type, Engine_Type and Route_Type
 
 ```{r}
-library(ggplot2)
-library(dplyr)
-library(patchwork)
-# Function to create boxplots
-plot_efficiency_boxplot <- function(var) {
-  ggplot(marine, aes(x = .data[[var]], y = Efficiency_nm_per_kWh, fill = .data[[var]])) +
-    geom_boxplot(outlier.colour = "red", outlier.shape = 16, alpha = 0.7) +
-    theme_minimal() +
-    labs(y = "Efficiency (nm per kWh)", x = var, 
-         subtitle = paste("Boxplot of Efficiency across", var)) +
-    scale_fill_brewer(palette = "Set2") +
-    theme(axis.title.x = element_text(face = "bold", size = 10),
-          legend.position = "none",
-          plot.subtitle = element_text(size = 10),
-          axis.title.y = element_text(size = 10)) +
-    coord_flip()
-}
 
-# Generate boxplots
-boxplot_ship <- plot_efficiency_boxplot("Ship_Type")
-boxplot_engine <- plot_efficiency_boxplot("Engine_Type")
-boxplot_route <- plot_efficiency_boxplot("Route_Type")
-
-# Display all boxplots together
-boxplot_ship / boxplot_engine / boxplot_route
-
-```
-
-## Heatmap
-
-```{r}
+#| fig-width: 12
+#| fig-height: 10
 # Convert Efficiency into categories for heatmap visualization
 marine <- marine %>%
   mutate(
@@ -402,7 +420,7 @@ plot_efficiency_heatmap <- function(var) {
     labs(x = var,
          y = "Efficiency Level",
          fill = "Proportion",
-         subtitle = paste("Heatmap of Efficiency variation across", var)) +
+         subtitle = paste("Heatmap of Efficiency in", var)) +
     theme_minimal() +
     theme(panel.background = element_rect(fill = "white", colour = NA),
           axis.text.x = element_text(size = 8, angle = 45), 
@@ -424,9 +442,15 @@ efficiency_heatmap_ship + efficiency_heatmap_engine + efficiency_heatmap_route
 
 ```
 
-Insights: Across all categories, efficiency value typically range between 0.4 to 1.2 nm per kWh, with most median clustered around 0.8 to 1.0. For Ship Type,the median efficiency for all ship types is around 0.8–1.0 nm per kWh.
+**Insights**
 
-**EDA 4: Exploring Financial Performance**
+-   Moderate efficiency dominates across all categories, suggesting that most ships operate within standard efficiency ranges.
+
+-   Bulk Carriers, Container Ships, Diesel, and HFO engines tend to be more efficient.
+
+-   Fish Carriers, Steam Turbines, and Coastal Routes show greater efficiency variability, suggesting they are more sensitive to operational factors.
+
+### EDA 6: Exploring Financial Performance
 
 ```{r}
 library(ggplot2)
@@ -456,4 +480,62 @@ profitability_ridgeline <- ggplot(marine, aes(x = Profitability_USD, y = Ship_Ty
 print(profitability_ridgeline)
 ```
 
-EDA 5:
+**Insights**
+
+-   **Most ship types operate near break-even profitability**, with some variation in earnings.\
+
+-   **Bulk Carriers and Container Ships** show more stable profitability trends.\
+
+-   **Tanker ships have a wider range of profitability,** potentially reflecting volatile fuel costs and market conditions.
+
+### **EDA 7:** Treemap of Revenue Contribution by Ship Type
+
+```{r}
+# Load required libraries
+library(treemap)
+library(dplyr)
+
+
+
+# Summarize data: Total revenue & average load percentage per Ship Type & Route Type
+treemap_data <- marine %>%
+  group_by(Ship_Type, Route_Type) %>%
+  summarise(
+    Total_Revenue = sum(Revenue_per_Voyage_USD, na.rm = TRUE),
+    Avg_Load = mean(Average_Load_Percentage, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Generate treemap with color based on Ship_Type
+tm <- treemap(treemap_data,
+        index = c("Ship_Type", "Route_Type"),  # Hierarchical structure
+        vSize = "Total_Revenue",  # Size based on total revenue
+        vColor = "Ship_Type",  # Color by ship type (categorical)
+        type = "categorical",  # Use categorical color scheme
+        palette = "Set3",  # More distinct colors for ship types
+        title = "Revenue Contribution by Ship Type and Route",
+        title.legend = "Ship Type"
+)
+
+
+```
+
+-   **Insights**
+
+-   **Bulk Carriers (green) and Container Ships (yellow) have the largest sections,** indicating they generate the most revenue.
+
+-   Within these ship types, **Long-haul and Coastal routes contribute significantly.**
+
+-   **Transoceanic routes for Bulk Carriers** are also substantial.
+
+## 5. Summary and Conclusion
+
+From the analysis of ship performance, efficiency, profitability, and revenue distribution, the following key **implications** emerge:
+
+-   **Most voyages occur under stable weather conditions**, and **route type significantly impacts operational choices**.
+
+-   The **choice of engine type influences speed consistency**, with **Steam Turbines being more variable** and **Diesel/HFO engines maintaining steady performance**.
+
+-   Profitability is **highly dependent on ship type and operational costs**. **Container Ships and Bulk Carriers** show **consistent profits**, while Tankers **face more financial risk due to market volatility**.
+
+-   Shipping companies should **prioritize investments in Bulk Carriers and Container Ships** while optimizing **Long-haul and Coastal routes**. **Short-haul voyages might need alternative revenue models** or pricing strategies.
