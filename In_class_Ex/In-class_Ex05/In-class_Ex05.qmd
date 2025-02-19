@@ -8,12 +8,15 @@ execute:
   warning: false
   freeze: true
 ---
+
 Getting Started
+
 ```{r}
 pacman:: p_load(tidyverse,readxl,SmartEDA,easystats,gtsummary,ggstatsplot)
 ```
 
 Importing Data
+
 ```{r}
 car_resale <- read_xls("data/ToyotaCorolla.xls","data")
 ```
@@ -32,6 +35,7 @@ summary(car_resale)
 ```
 
 Data Overview
+
 ```{r}
 car_resale %>%
    ExpData(type=1)
@@ -63,19 +67,19 @@ car_resale <- read_xls("data/ToyotaCorolla.xls",
 ```{r}
 summary(car_resale)
 ```
+
 ```{r}
 car_resale %>%
    ExpData(type=1)
 ```
-
 
 ```{r}
 car_resale %>%
    ExpData(type=2)
 ```
 
-
 Explore Numerical Viz ()
+
 ```{r}
 car_resale %>%
   ExpNumViz(target=NULL,
@@ -91,7 +95,8 @@ car_resale %>%
             Page=c(2,2))
 ```
 
-Bar plots for all categorical  variables
+Bar plots for all categorical variables
+
 ```{r}
 #| fig-width: 12
 #| fig-height: 10
@@ -105,6 +110,7 @@ Bar plots for all categorical  variables
             sample=16)
   
 ```
+
 ```{r}
 model <- lm(Price ~ Age_08_04 + Mfg_Year +KM +
                Weight + Guarantee_Period, 
@@ -131,6 +137,7 @@ check_normality(model1)
 ```{r}
 check_heteroscedasticity(model1)
 ```
+
 ```{r}
 check_model(model1)
 ```
@@ -165,9 +172,7 @@ p_model1 <- parameters(model1)
 plot(parameters(model1))
 ```
 
-
 ```{r}
 ggcoefstats(model1,
             output = "plot")
 ```
-
