@@ -1,0 +1,459 @@
+---
+title: "Take_Home Exercise 1"
+author: "Pwint Phoo Thaw"
+date-modified: "last-modified"
+execute:
+  echo: true
+  eva: true
+  warning: false
+  freeze: true
+---
+
+# **Ship Performance in the Gulf of Guinea**
+
+## 1. Overview
+
+### Setting the scene
+
+The maritime sector is one of the most critical components of global trade, contributing significantly to economic growth and sustainability. Understanding ship performance, fuel efficiency, and operational cost factors are essential for improving decision-making and minimizing environmental impact.
+
+An international media company that publishes weekly content on digital platforms is planning to release articles on "Ship Performance in the Gulf of Guinea".
+
+As the role of the graphical editor of the media company, I am going to prepare data visualization for the article.
+
+### Objective
+
+In this exercise, Exploratory Data Analysis (EDA) methods and ggplot functions are used to explore:
+
+-   the distribution of Ship performance in **efficiency, operational cost, speed, fuel consumption, and revenue generation**.
+
+-   the relationship between these performances with draft, cargo weight, weather, engine type, ship type, seasonal impact and etc.
+
+## 2. Getting Started
+
+### Loading packages
+
+The following R packages using the `pacman::p_load()` function are loaded.
+
+-   **tidyverse**: Core collection of R packages designed for data science
+
+-   **haven**: To read in data formats such as SAS and SPSS
+
+-   **ggrepel**: to provides geoms for **ggplot2** to repel overlapping text labels
+
+-   **ggthemes**: to use additional themes for **ggplot2**
+
+-   **patchwork**: to prepare composite figure created using **ggplot2**
+
+-   **ggridges**: to plot ridgeline plots
+
+-   **ggdist**: for visualizations of distributions and uncertainty
+
+-   **scales**: provides the internal scaling infrastructure used by **ggplot2**
+
+```{r}
+pacman::p_load(tidyverse, haven,
+               ggrepel, ggthemes,
+               ggridges, ggdist,
+               patchwork, scales)
+
+```
+
+## 3. Data Wrangling
+
+### Importing data
+
+The dataset used in the exercise is in CSV format, retrieved from `Kaggle.com`<https://www.kaggle.com/datasets/jeleeladekunlefijabi/ship-performance-clustering-dataset>
+
+The code chunk below import the dataset using `read_csv()` function of the haven package.
+
+```{r}
+library(readr) 
+marine <- read_csv("data/Ship_Performance_Dataset.csv")
+```
+
+### Glimpse of data
+
+Using the `glimpse()` function, we see that the dataset consists of 2,736 rows and 18 columns. It also shows the column names, column type, and the first few entries of each column.
+
+```{r}
+glimpse(marine)
+```
+
+### Checking for Duplicates
+
+Using the `duplicated` function, we see that there are no duplicate entries in the data.
+
+```{r}
+marine[duplicated(marine),]
+```
+
+### Checking for Missing Values
+
+Numerical Variables are selected to identify
+
+The `colSums()` function in the **base** package is used to check for missing values in `marine`. There are no missing values in the tibble data frame.
+
+```{r}
+colSums(is.na(marine))
+```
+
+### Correlation Analysis
+
+Numerical variables are selected to perform correlation analysis. All the variables looks fine.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(reshape2)
+
+# Select only numeric variables
+numeric_vars <- marine %>% select(where(is.numeric))
+
+# Compute correlation matrix
+cor_matrix <- cor(numeric_vars, use = "complete.obs")
+
+# Melt correlation matrix for better visualization
+cor_data <- melt(cor_matrix)
+
+# Improved heatmap-style correlation matrix
+ggplot(data = cor_data, aes(x=Var1, y=Var2, fill=value)) + 
+  geom_tile(color = "white") + 
+  geom_text(aes(label = round(value, 2)), color = "black", size = 3) + 
+  scale_fill_gradient2(low = "#E46726", mid = "white", high = "#6D9EC1", midpoint = 0) +
+  labs(title = "Correlation Matrix of Marine Dataset",
+       x = "", y = "") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+```
+
+### Filtering for Relevant Variables
+
+Of 18 columns, the following 12 are preliminary selected to answer the analytical questions. The [Code Book](https://www.kaggle.com/datasets/jeleeladekunlefijabi/ship-performance-clustering-dataset/data) from Kaggle provides detailed description of the variables and I have referred to it..
+
++-------------------------+------------------------------------------------------------------+------------------+
+| Variable Name           | Description                                                      | Type of Variable |
++=========================+==================================================================+==================+
+| Ship_Type               | Type of ship                                                     | Categorical      |
+|                         |                                                                  |                  |
+|                         | (Fish Carrier, Container Ship, Tanker, Bulk Carrier)             |                  |
++-------------------------+------------------------------------------------------------------+------------------+
+| Route_Type              | Shipping route type                                              | Categorical      |
+|                         |                                                                  |                  |
+|                         | (Coastal, Short-haul, Long-haul, Transoceanic)                   |                  |
++-------------------------+------------------------------------------------------------------+------------------+
+| Engine_Type             | Type of engine                                                   | Categorical      |
+|                         |                                                                  |                  |
+|                         | (None, Diesel, Heavy Fuel Oil (HFO), Steam Turbine)              |                  |
++-------------------------+------------------------------------------------------------------+------------------+
+| Weather_Condition       | Maintenance condition of the ship                                | Categorical      |
+|                         |                                                                  |                  |
+|                         | (None, Calm, Moderate ,Rough)                                    |                  |
++-------------------------+------------------------------------------------------------------+------------------+
+| Maintenance_Status      | Prevailing weather conditions during voyages                     | Categorical      |
+|                         |                                                                  |                  |
+|                         | (None, Good, Fair, Critical)                                     |                  |
++-------------------------+------------------------------------------------------------------+------------------+
+| Speed_Over_Ground_knots | Average speed of the ship over water                             | Numerical        |
++-------------------------+------------------------------------------------------------------+------------------+
+| Engine_Power_kW         | Engine power output                                              | Numerical        |
++-------------------------+------------------------------------------------------------------+------------------+
+| Distance_Traveled_nm    | Total distance traveled by the ship                              | Numerical        |
++-------------------------+------------------------------------------------------------------+------------------+
+| Operational_Cost_USD    | Total operational cost per voyage                                | Numerical        |
++-------------------------+------------------------------------------------------------------+------------------+
+| Revenue_per_Voyage_USD  | Revenue generated per voyage                                     | Numerical        |
++-------------------------+------------------------------------------------------------------+------------------+
+| Efficiency_nm_per_kWh   | Energy efficiency calculated in nautical miles per kilowatt-hour | Numerical        |
++-------------------------+------------------------------------------------------------------+------------------+
+| Average_Load_Percentage | Average load of the ship calculated in percentage                | Numerical        |
++-------------------------+------------------------------------------------------------------+------------------+
+
+```{r}
+marine_filtered <- marine %>%
+  select(Ship_Type, Route_Type,Engine_Type,Weather_Condition,Maintenance_Status,Speed_Over_Ground_knots,
+        Engine_Power_kW, Distance_Traveled_nm,Operational_Cost_USD,Revenue_per_Voyage_USD,Efficiency_nm_per_kWh,
+        Average_Load_Percentage)
+
+glimpse(marine_filtered)
+```
+
+## 4. Exploratory Data Analysis
+
+### EDA 1: Distribution of Numerical Variables
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(ggridges)
+library(dplyr)
+library(tidyr)
+library(viridis)
+library(patchwork)
+
+# Convert data to long format for visualization
+marine_long <- marine %>%
+  pivot_longer(
+    cols = c("Speed_Over_Ground_knots", "Engine_Power_kW", "Distance_Traveled_nm", 
+             "Operational_Cost_USD", "Revenue_per_Voyage_USD", "Efficiency_nm_per_kWh", 
+             "Average_Load_Percentage"),
+    names_to = "Variable",
+    values_to = "Value"
+  )
+
+# Apply log transformation for better scaling
+marine_long <- marine_long %>%
+  mutate(Value = ifelse(Value > 0, log10(Value), NA))  # Log transformation
+
+# Improved Ridge Plot (Better visualization of distributions)
+marine_ridgeplot <- ggplot(marine_long, aes(x = Value, y = Variable, fill = Variable)) +
+  geom_density_ridges(alpha = 0.7, quantile_lines = TRUE, 
+                      quantile_fun = function(y, ...) quantile(y, probs = 0.5, na.rm = TRUE)) +
+  scale_x_continuous(name = "Log-Transformed Values", labels = scales::comma) +
+  scale_fill_viridis_d() +
+  labs(title = "Distributions of Key Numerical Variables in Marine Dataset") +
+  theme_minimal() +
+  theme(legend.position = "none", axis.title.y = element_blank())
+
+# Improved Boxplot (Detecting outliers with better scaling)
+marine_boxplot <- ggplot(marine_long, aes(x = Variable, y = Value, fill = Variable)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = 16, alpha = 0.8) +
+  coord_flip() +  
+  scale_fill_viridis_d() +
+  labs(title = "Boxplots of Key Numerical Variables in Marine Dataset",
+       subtitle = "Red dots indicate potential outliers",
+       x = "", y = "Log-Transformed Values") +
+  theme_minimal() +
+  theme(legend.position = "none", axis.title.y = element_blank())
+
+# Combine Ridge Plot and Boxplot
+marine_ridgeplot / marine_boxplot
+
+```
+
+### EDA 2: Exploring Relationship between Speed and Engine Power
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+
+# Create the faceted density plot (Speed Over Ground Distribution by Engine Power)
+speed_densityplot <- ggplot(data = marine, aes(x = Speed_Over_Ground_knots, fill = Engine_Type)) +    
+  geom_density(alpha = 0.3) + 
+  facet_wrap(~ Engine_Type, scales = "free_y", nrow = 2) +  
+  labs(x = "Speed Over Ground (knots)", y = "Density", 
+       title = "Speed Distribution Across Engine Types",
+       subtitle = "Density plot of Speed Over Ground, colored by Engine Type") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1") +
+  theme(legend.position = "none", 
+        plot.title = element_text(face = "bold", size = 12), 
+        plot.subtitle = element_text(size = 8), 
+        axis.title.y = element_text(size = 8), 
+        axis.title.x = element_text(size = 8))
+
+# Create the boxplot for Speed Over Ground by Engine Type
+speed_boxplot <- ggplot(marine, aes(x = Engine_Type, y = Speed_Over_Ground_knots, fill = Engine_Type)) +
+  geom_boxplot(position = position_dodge(0.8)) +
+  theme_minimal() +
+  labs(y = "Speed Over Ground (knots)", subtitle = "Box plots of Speed Over Ground by Engine Type") +
+  theme(axis.title.x = element_blank(), 
+        legend.title = element_text(face = "bold", size = 8), 
+        plot.subtitle = element_text(size = 8), 
+        axis.title.y = element_text(size = 8)) +
+  scale_fill_brewer(palette = "Set2")
+
+
+
+# Combine the plots
+speed_densityplot + speed_boxplot
+```
+
+### EDA 3: Exploring Relationship between Efficiency Across Ship Type, Engine Type and Route Type
+
+::: panel-tabset
+## Box Plot
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+# Function to create boxplots
+plot_efficiency_boxplot <- function(var) {
+  ggplot(marine, aes(x = .data[[var]], y = Efficiency_nm_per_kWh, fill = .data[[var]])) +
+    geom_boxplot(outlier.colour = "red", outlier.shape = 16, alpha = 0.7) +
+    theme_minimal() +
+    labs(y = "Efficiency (nm per kWh)", x = var, 
+         subtitle = paste("Boxplot of Efficiency across", var)) +
+    scale_fill_brewer(palette = "Set2") +
+    theme(axis.title.x = element_text(face = "bold", size = 10),
+          legend.position = "none",
+          plot.subtitle = element_text(size = 10),
+          axis.title.y = element_text(size = 10)) +
+    coord_flip()
+}
+
+# Generate boxplots
+boxplot_ship <- plot_efficiency_boxplot("Ship_Type")
+boxplot_engine <- plot_efficiency_boxplot("Engine_Type")
+boxplot_route <- plot_efficiency_boxplot("Route_Type")
+
+# Display all boxplots together
+boxplot_ship / boxplot_engine / boxplot_route
+```
+
+## Code
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+# Function to create boxplots
+plot_efficiency_boxplot <- function(var) {
+  ggplot(marine, aes(x = .data[[var]], y = Efficiency_nm_per_kWh, fill = .data[[var]])) +
+    geom_boxplot(outlier.colour = "red", outlier.shape = 16, alpha = 0.7) +
+    theme_minimal() +
+    labs(y = "Efficiency (nm per kWh)", x = var, 
+         subtitle = paste("Boxplot of Efficiency across", var)) +
+    scale_fill_brewer(palette = "Set2") +
+    theme(axis.title.x = element_text(face = "bold", size = 10),
+          legend.position = "none",
+          plot.subtitle = element_text(size = 10),
+          axis.title.y = element_text(size = 10)) +
+    coord_flip()
+}
+
+# Generate boxplots
+boxplot_ship <- plot_efficiency_boxplot("Ship_Type")
+boxplot_engine <- plot_efficiency_boxplot("Engine_Type")
+boxplot_route <- plot_efficiency_boxplot("Route_Type")
+
+# Display all boxplots together
+boxplot_ship / boxplot_engine / boxplot_route
+
+```
+
+## 
+:::
+
+## Box Plot
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(patchwork)
+# Function to create boxplots
+plot_efficiency_boxplot <- function(var) {
+  ggplot(marine, aes(x = .data[[var]], y = Efficiency_nm_per_kWh, fill = .data[[var]])) +
+    geom_boxplot(outlier.colour = "red", outlier.shape = 16, alpha = 0.7) +
+    theme_minimal() +
+    labs(y = "Efficiency (nm per kWh)", x = var, 
+         subtitle = paste("Boxplot of Efficiency across", var)) +
+    scale_fill_brewer(palette = "Set2") +
+    theme(axis.title.x = element_text(face = "bold", size = 10),
+          legend.position = "none",
+          plot.subtitle = element_text(size = 10),
+          axis.title.y = element_text(size = 10)) +
+    coord_flip()
+}
+
+# Generate boxplots
+boxplot_ship <- plot_efficiency_boxplot("Ship_Type")
+boxplot_engine <- plot_efficiency_boxplot("Engine_Type")
+boxplot_route <- plot_efficiency_boxplot("Route_Type")
+
+# Display all boxplots together
+boxplot_ship / boxplot_engine / boxplot_route
+
+```
+
+## Heatmap
+
+```{r}
+# Convert Efficiency into categories for heatmap visualization
+marine <- marine %>%
+  mutate(
+    Efficiency_Category = factor(case_when(
+      Efficiency_nm_per_kWh >= quantile(Efficiency_nm_per_kWh, 0.75, na.rm = TRUE) ~ "High",
+      Efficiency_nm_per_kWh >= quantile(Efficiency_nm_per_kWh, 0.25, na.rm = TRUE) ~ "Moderate",
+      TRUE ~ "Low"
+    ), levels = c("Low", "Moderate", "High"))
+  )
+
+# Calculate proportions across efficiency levels by category
+efficiency_proportions <- marine %>%
+  gather(key = "Efficiency_Level", value = "Value", Efficiency_Category) %>%
+  count(Ship_Type, Engine_Type, Route_Type, Efficiency_Level, Value) %>%
+  group_by(Ship_Type, Engine_Type, Route_Type, Efficiency_Level) %>%
+  mutate(Proportion = n / sum(n),
+         Value = factor(Value, levels = c("Low", "Moderate", "High"))) %>%
+  ungroup()
+
+# Function to create heatmaps
+plot_efficiency_heatmap <- function(var) {
+  ggplot(efficiency_proportions, aes(x = .data[[var]], y = Value, fill = Proportion)) +
+    geom_tile() +
+    scale_fill_gradient(low = "white", high = "steelblue") +
+    facet_wrap(~ Efficiency_Level, scales = "free_x") +
+    labs(x = var,
+         y = "Efficiency Level",
+         fill = "Proportion",
+         subtitle = paste("Heatmap of Efficiency variation across", var)) +
+    theme_minimal() +
+    theme(panel.background = element_rect(fill = "white", colour = NA),
+          axis.text.x = element_text(size = 8, angle = 45), 
+          axis.text.y = element_text(size = 8),
+          axis.title.x = element_text(size = 8),
+          axis.title.y = element_text(size = 8), 
+          legend.text = element_text(size = 8),
+          legend.title = element_text(size = 8),
+          plot.subtitle = element_text(size = 8))
+}
+
+# Generate heatmaps
+efficiency_heatmap_ship <- plot_efficiency_heatmap("Ship_Type")
+efficiency_heatmap_engine <- plot_efficiency_heatmap("Engine_Type")
+efficiency_heatmap_route <- plot_efficiency_heatmap("Route_Type")
+
+# Display all heatmaps together
+efficiency_heatmap_ship + efficiency_heatmap_engine + efficiency_heatmap_route
+
+```
+
+Insights: Across all categories, efficiency value typically range between 0.4 to 1.2 nm per kWh, with most median clustered around 0.8 to 1.0. For Ship Type,the median efficiency for all ship types is around 0.8–1.0 nm per kWh.
+
+**EDA 4: Exploring Financial Performance**
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(ggridges)
+library(patchwork)
+
+# Compute Profitability
+marine <- marine %>%
+  mutate(Profitability_USD = Revenue_per_Voyage_USD - Operational_Cost_USD)
+
+# Ridgeline Plot of Profitability by Ship Type
+profitability_ridgeline <- ggplot(marine, aes(x = Profitability_USD, y = Ship_Type, fill = 0.5 - abs(0.5 - stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) +
+  labs(x = "Profitability (USD)", y = "Ship Type", 
+       title = "Profitability Distribution by Ship Type",
+       subtitle = "Ridgeline plot comparing density distributions") +
+  theme_minimal() +
+  theme(legend.position = "none", 
+        plot.title = element_text(face = "bold", size = 12), 
+        plot.subtitle = element_text(size = 10),
+        axis.title.y = element_text(size = 10), 
+        axis.title.x = element_text(size = 10))
+
+# Display Ridgeline Plot
+print(profitability_ridgeline)
+```
+
+EDA 5:

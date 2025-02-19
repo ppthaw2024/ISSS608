@@ -1,0 +1,72 @@
+---
+title: "In-class_Ex04"
+format: html
+date-modified: "last-modified"
+execute:
+  echo: true
+  eva: true
+  warning: false
+  freeze: true
+---
+
+```{r}
+pacman:: p_load(haven, SmartEDA, tidyverse, tidymodels,ggdist, ggridges, ggthemes,
+               colorspace, tidyverse)
+```
+
+```{r}
+exam_data <- read_csv("data/Exam_data.csv")
+```
+
+Changing x and y can make horizontal or vertical boxplot
+
+```{r}
+ggplot(data = exam_data,
+       aes(x = ENGLISH,
+           y = CLASS)) +
+   geom_boxplot()
+  
+```
+
+**The order of scale_x_continuous and scale_y_discrete work for horizontal box plot. should change according for vertical**
+
+```{r}
+ggplot(data =exam_data, 
+       aes(x = ENGLISH, 
+           y = CLASS)) +
+  geom_density_ridges(
+    scale = 3,
+    rel_min_height = 0.01,
+    bandwidth = 3.4,
+    fill = lighten("#7097BB", .3),
+    color = "white"
+  ) +
+  scale_x_continuous(
+    name = "English grades",
+    expand = c(0, 0)
+    ) +
+  scale_y_discrete(name = NULL, expand = expansion(add = c(0.2, 2.6))) +
+  theme_ridges()
+```
+
+**Raincloud plot 9.4.3, dotted points determine the height of the ridges**
+
+stat_halfeyes , stat_dots
+
+```{r}
+ggplot(data= exam_data, 
+       aes(x = RACE, 
+           y = ENGLISH)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA) +
+  geom_boxplot(width = .20,
+               outlier.shape = NA) +
+  stat_dots(side = "left", 
+            justification = 1.2, 
+            binwidth = .5,
+            dotsize = 2)
+```
+
+Unequal variance, use Welch test
