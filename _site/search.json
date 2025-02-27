@@ -530,5 +530,47 @@
     "title": "Take_Home Exercise 1",
     "section": "",
     "text": "From the analysis of ship performance, efficiency, profitability, and revenue distribution, the following key implications emerge:\n\nMost voyages occur under stable weather conditions, and route type significantly impacts operational choices.\nThe choice of engine type influences speed consistency, with Steam Turbines being more variable and Diesel/HFO engines maintaining steady performance.\nProfitability is highly dependent on ship type and operational costs. Container Ships and Bulk Carriers show consistent profits, while Tankers face more financial risk due to market volatility.\nShipping companies should prioritize investments in Bulk Carriers and Container Ships while optimizing Long-haul and Coastal routes. Short-haul voyages might need alternative revenue models or pricing strategies."
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html",
+    "title": "Hands-on Exercise 07: Visualising and Analysing Time-oriented Data",
+    "section": "",
+    "text": "plotting a calender heatmap by using ggplot2 functions,\nplotting a cycle plot by using ggplot2 function,\nplotting a slopegraph\nplotting a horizon chart"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#learning-outcome",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#learning-outcome",
+    "title": "Hands-on Exercise 07: Visualising and Analysing Time-oriented Data",
+    "section": "",
+    "text": "plotting a calender heatmap by using ggplot2 functions,\nplotting a cycle plot by using ggplot2 function,\nplotting a slopegraph\nplotting a horizon chart"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#getting-started",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#getting-started",
+    "title": "Hands-on Exercise 07: Visualising and Analysing Time-oriented Data",
+    "section": "7.2 Getting Started",
+    "text": "7.2 Getting Started\n\npacman:: p_load(tidyverse,scales, viridis, lubridate, ggplot2 ,dplyr, ggthemes, gridExtra, readxl, knitr, data.table)"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#plotting-calendar-heatmap",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#plotting-calendar-heatmap",
+    "title": "Hands-on Exercise 07: Visualising and Analysing Time-oriented Data",
+    "section": "7.4 Plotting Calendar Heatmap",
+    "text": "7.4 Plotting Calendar Heatmap\n\n7.4.1 The Data\nFor the purpose of this hands-on exercise, eventlog.csv file will be used. This data file consists of 199,999 rows of time-series cyber attack records by country.\n\n\n7.4.2 Importing the data\nFirst, you will use the code chunk below to import eventlog.csv file into R environment and called the data frame as attacks.\n\nattacks &lt;- read_csv(\"eventlog.csv\")\n\n\n\n7.4.3 Examining the data structure\n\nkable(head(attacks))\n\n\n\n\ntimestamp\nsource_country\ntz\n\n\n\n\n2015-03-12 15:59:16\nCN\nAsia/Shanghai\n\n\n2015-03-12 16:00:48\nFR\nEurope/Paris\n\n\n2015-03-12 16:02:26\nCN\nAsia/Shanghai\n\n\n2015-03-12 16:02:38\nUS\nAmerica/Chicago\n\n\n2015-03-12 16:03:22\nCN\nAsia/Shanghai\n\n\n2015-03-12 16:03:45\nCN\nAsia/Shanghai\n\n\n\n\n\n\n\n7.4.4 Data Preparation\nStep 1: Deriving weekday and hour of day fields\nBefore we can plot the calender heatmap, two new fields namely wkday and hour need to be derived. In this step, we will write a function to perform the task.\n\nmake_hr_wkday &lt;- function(ts, sc, tz) {\n  real_times &lt;- ymd_hms(ts, \n                        tz = tz[1], \n                        quiet = TRUE)\n  dt &lt;- data.table(source_country = sc,\n                   wkday = weekdays(real_times),\n                   hour = hour(real_times))\n  return(dt)\n  }\n\nStep 2: Deriving the attacks tibble data frame\n\nwkday_levels &lt;- c('Saturday', 'Friday', \n                  'Thursday', 'Wednesday', \n                  'Tuesday', 'Monday', \n                  'Sunday')\n\nattacks &lt;- attacks %&gt;%\n  group_by(tz) %&gt;%\n  do(make_hr_wkday(.$timestamp, \n                   .$source_country, \n                   .$tz)) %&gt;% \n  ungroup() %&gt;% \n  mutate(wkday = factor(\n    wkday, levels = wkday_levels),\n    hour  = factor(\n      hour, levels = 0:23))\n\n\nkable(head(attacks))\n\n\n\n\ntz\nsource_country\nwkday\nhour\n\n\n\n\nAfrica/Cairo\nBG\nSaturday\n20\n\n\nAfrica/Cairo\nTW\nSunday\n6\n\n\nAfrica/Cairo\nTW\nSunday\n8\n\n\nAfrica/Cairo\nCN\nSunday\n11\n\n\nAfrica/Cairo\nUS\nSunday\n15\n\n\nAfrica/Cairo\nCA\nMonday\n11\n\n\n\n\n\n\n\n7.4.5 Building the Calendar Heatmaps\n\ngrouped &lt;- attacks %&gt;% \n  count(wkday, hour) %&gt;% \n  ungroup() %&gt;%\n  na.omit()\n\nggplot(grouped, \n       aes(hour, \n           wkday, \n           fill = n)) + \ngeom_tile(color = \"white\", \n          size = 0.1) + \ntheme_tufte(base_family = \"Helvetica\") + \ncoord_equal() +\nscale_fill_gradient(name = \"# of attacks\",\n                    low = \"sky blue\", \n                    high = \"dark blue\") +\nlabs(x = NULL, \n     y = NULL, \n     title = \"Attacks by weekday and time of day\") +\ntheme(axis.ticks = element_blank(),\n      plot.title = element_text(hjust = 0.5),\n      legend.title = element_text(size = 8),\n      legend.text = element_text(size = 6) )\n\n\n\n\n\n\n\n\n\n\n7.4.6 Building Multiple Calendar Heatmaps\nChallenge: Building multiple heatmaps for the top four countries with the highest number of attacks.\nStep 1: Deriving attack by country object\n\nattacks_by_country &lt;- count(\n  attacks, source_country) %&gt;%\n  mutate(percent = percent(n/sum(n))) %&gt;%\n  arrange(desc(n))\n\nStep 2: Preparing the tidy data frame\n\ntop4 &lt;- attacks_by_country$source_country[1:4]\ntop4_attacks &lt;- attacks %&gt;%\n  filter(source_country %in% top4) %&gt;%\n  count(source_country, wkday, hour) %&gt;%\n  ungroup() %&gt;%\n  mutate(source_country = factor(\n    source_country, levels = top4)) %&gt;%\n  na.omit()\n\nStep 3: Plotting the Multiple Calender Heatmap by using ggplot2 package.\n\nggplot(top4_attacks, \n       aes(hour, \n           wkday, \n           fill = n)) + \n  geom_tile(color = \"white\", \n          size = 0.1) + \n  theme_tufte(base_family = \"Helvetica\") + \n  coord_equal() +\n  scale_fill_gradient(name = \"# of attacks\",\n                    low = \"sky blue\", \n                    high = \"dark blue\") +\n  facet_wrap(~source_country, ncol = 2) +\n  labs(x = NULL, y = NULL, \n     title = \"Attacks on top 4 countries by weekday and time of day\") +\n  theme(axis.ticks = element_blank(),\n        axis.text.x = element_text(size = 7),\n        plot.title = element_text(hjust = 0.5),\n        legend.title = element_text(size = 8),\n        legend.text = element_text(size = 6) )"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#plotting-cycle-plot",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#plotting-cycle-plot",
+    "title": "Hands-on Exercise 07: Visualising and Analysing Time-oriented Data",
+    "section": "7.5 Plotting Cycle Plot",
+    "text": "7.5 Plotting Cycle Plot\nLearning how to plot a cycle plot showing the time-series patterns and trend of visitor arrivals from Vietnam programmatically by using ggplot2 functions.\n\n7.5.1 Step 1: Data Import\n\nair &lt;- read_excel(\"arrivals_by_air.xlsx\")\n\n\n\n7.5.2 Step 2: Deriving month and year fields\n\nair$month &lt;- factor(month(air$`Month-Year`), \n                    levels=1:12, \n                    labels=month.abb, \n                    ordered=TRUE) \nair$year &lt;- year(ymd(air$`Month-Year`))\n\n\n\n7.5.3 Step 4: Extracting the target country\n\nVietnam &lt;- air %&gt;% \n  select(`Vietnam`, \n         month, \n         year) %&gt;%\n  filter(year &gt;= 2010)\n\n\n\n7.5.4 Step 5: Computing year average arrivals by month\n\nhline.data &lt;- Vietnam %&gt;% \n  group_by(month) %&gt;%\n  summarise(avgvalue = mean(`Vietnam`))\n\n\n\n7.5.5 Srep 6: Plotting the cycle plot\n\nggplot() + \n  geom_line(data=Vietnam,\n            aes(x=year, \n                y=`Vietnam`, \n                group=month), \n            colour=\"black\") +\n  geom_hline(aes(yintercept=avgvalue), \n             data=hline.data, \n             linetype=6, \n             colour=\"red\", \n             size=0.5) + \n  facet_grid(~month) +\n  labs(axis.text.x = element_blank(),\n       title = \"Visitor arrivals from Vietnam by air, Jan 2010-Dec 2019\") +\n  xlab(\"\") +\n  ylab(\"No. of Visitors\") +\n  theme_tufte(base_family = \"Helvetica\")"
+  },
+  {
+    "objectID": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#plotting-slopegraph",
+    "href": "Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html#plotting-slopegraph",
+    "title": "Hands-on Exercise 07: Visualising and Analysing Time-oriented Data",
+    "section": "7.6 Plotting Slopegraph",
+    "text": "7.6 Plotting Slopegraph\n\n7.6.1 Step 1: Data Import\nImport the rice data set into R environment by using the code chunk below.\n\nrice &lt;- read_csv(\"rice.csv\")\n\n\n\n7.6.2 Step 2: Plotting the slopegraph\n\nlibrary(CGPfunctions)\nrice %&gt;% \n  mutate(Year = factor(Year)) %&gt;%\n  filter(Year %in% c(1961, 1980)) %&gt;%\n  newggslopegraph(Year, Yield, Country,\n                Title = \"Rice Yield of Top 11 Asian Counties\",\n                SubTitle = \"1961-1980\",\n                Caption = \"Prepared by: Pwint Phoo Thaw\")"
   }
 ]
