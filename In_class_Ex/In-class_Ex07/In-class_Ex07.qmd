@@ -1,0 +1,111 @@
+---
+title: "In-class_Ex07: Visualising, Analysing and Forecasting Time-series Data: tidyverts methods"
+format: html
+date-modified: "last-modified"
+execute:
+  echo: true
+  eva: true
+  warning: false
+  freeze: true
+---
+
+## **7.2 Getting Started**
+
+```{r}
+pacman::p_load(tidyverse, tsibble, feasts, fable, seasonal)
+```
+
+### **7.2.1 Importing the data**
+
+```{r}
+ts_data <- read_csv(
+  "visitor_arrivals_by_air.csv")
+```
+
+```{r}
+ts_data$`Month-Year` <- dmy(
+  ts_data$`Month-Year`)
+```
+
+```{r}
+ts_data
+```
+
+### **7.2.3 Conventional base `ts` object versus `tibble` object**
+
+```{r}
+ts_data_ts <- ts(ts_data)       
+head(ts_data_ts)
+```
+
+### **7.2.4 Converting `tibble` object to `tsibble` object**
+
+```{r}
+ts_tsibble <- ts_data %>%
+  mutate(Month = yearmonth(`Month-Year`)) %>%
+  as_tsibble(index = `Month`)
+```
+
+## **7.3 Visualising Time-series Data**
+
+```{r}
+ts_longer <- ts_data %>%
+  pivot_longer(cols = c(2:34),
+               names_to = "Country",
+               values_to = "Arrivals")
+```
+
+### **7.3.1 Visualising single time-series: ggplot2 methods**
+
+```{r}
+ts_longer %>%
+  filter(Country == "Vietnam") %>%
+  ggplot(aes(x = `Month-Year`, 
+             y = Arrivals))+
+  geom_line(size = 0.5)
+```
+
+```{r}
+ts_longer %>%
+  filter(Country == "Malaysia") %>%
+  ggplot(aes(x = `Month-Year`, 
+             y = Arrivals))+
+  geom_line(size = 0.5)
+```
+
+```{r}
+ts_longer %>%
+  filter(Country == "Myanmar") %>%
+  ggplot(aes(x = `Month-Year`, 
+             y = Arrivals))+
+  geom_line(size = 0.5)
+```
+
+### **9.3.2 Plotting multiple time-series data with ggplot2 methods**
+
+very hard to see
+
+```{r}
+ggplot(data = ts_longer, 
+       aes(x = `Month-Year`, 
+           y = Arrivals,
+           color = Country))+
+  geom_line(size = 0.5) +
+  theme(legend.position = "bottom", 
+        legend.box.spacing = unit(0.5, "cm"))
+```
+
+In order to provide effective comparison, [`facet_wrap()`](https://ggplot2.tidyverse.org/reference/facet_wrap.html) of **ggplot2** package is used to create small multiple line graph also known as trellis plot.
+
+```{r}
+#| echo: false
+#| fig-height: 12
+ggplot(data = ts_longer, 
+       aes(x = `Month-Year`, 
+           y = Arrivals))+
+  geom_line(size = 0.5) +
+  facet_wrap(~ Country,
+             ncol = 3,  #after defining 3 coloumn, next one will go down to row
+             scales = "free_y") +
+  theme_bw()
+```

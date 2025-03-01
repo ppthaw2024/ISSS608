@@ -825,4 +825,3 @@ ggplot(data=realis2018_selected,
                                 size = 2) +
   geom_treemap_subgroup_border(colour = "gray20")
 ```
-
