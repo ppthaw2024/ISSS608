@@ -4,6 +4,14 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to **ISSS608 Visual Analytics & Applications**.
+### **Hello and welcome!** 🎉
 
 ![](images/Screenshot%202025-01-11%20140219.png)
+
+I'm **Phoo**, an aspiring **Business Analyst** with a passion for turning data into meaningful insights.
+
+This is my **Visual Analytics and Applications** showcase, where I document and share my coursework and projects for this module.
+
+Here, you'll see how I apply **data analytics techniques** to explore data, draw meaningful insights, and reveal hidden trends that tell a bigger story. 📊✨
+
+Take a look around and enjoy the journey through data! 😊

@@ -1,0 +1,10 @@
+---
+title: "Take_Home Exercise 2"
+author: "Pwint Phoo Thaw"
+date-modified: "last-modified"
+execute:
+  echo: true
+  eva: true
+  warning: false
+  freeze: true
+---

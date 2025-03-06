@@ -174,6 +174,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="../../In_class_Ex/In-class_Ex05/In-class_Ex05.html">
  <span class="dropdown-text">In-class Exercise 5</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../../In_class_Ex/In-class_Ex07/In-class_Ex07.html">
+ <span class="dropdown-text">In-class Exercise 5</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -217,6 +221,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#importing-the-data" id="toc-importing-the-data" class="nav-link" data-scroll-target="#importing-the-data"><strong>7.2.1 Importing the data</strong></a></li>
   <li><a href="#conventional-base-ts-object-versus-tibble-object" id="toc-conventional-base-ts-object-versus-tibble-object" class="nav-link" data-scroll-target="#conventional-base-ts-object-versus-tibble-object"><strong>7.2.3 Conventional base <code>ts</code> object versus <code>tibble</code> object</strong></a></li>
+  <li><a href="#converting-tibble-object-to-tsibble-object" id="toc-converting-tibble-object-to-tsibble-object" class="nav-link" data-scroll-target="#converting-tibble-object-to-tsibble-object"><strong>7.2.4 Converting <code>tibble</code> object to <code>tsibble</code> object</strong></a></li>
+  </ul></li>
+  <li><a href="#visualising-time-series-data" id="toc-visualising-time-series-data" class="nav-link" data-scroll-target="#visualising-time-series-data"><strong>7.3 Visualising Time-series Data</strong></a>
+  <ul class="collapse">
+  <li><a href="#visualising-single-time-series-ggplot2-methods" id="toc-visualising-single-time-series-ggplot2-methods" class="nav-link" data-scroll-target="#visualising-single-time-series-ggplot2-methods"><strong>7.3.1 Visualising single time-series: ggplot2 methods</strong></a></li>
+  <li><a href="#plotting-multiple-time-series-data-with-ggplot2-methods" id="toc-plotting-multiple-time-series-data-with-ggplot2-methods" class="nav-link" data-scroll-target="#plotting-multiple-time-series-data-with-ggplot2-methods"><strong>9.3.2 Plotting multiple time-series data with ggplot2 methods</strong></a></li>
+  <li><a href="#visual-analysis-of-seasonality-with-cycle-plot" id="toc-visual-analysis-of-seasonality-with-cycle-plot" class="nav-link" data-scroll-target="#visual-analysis-of-seasonality-with-cycle-plot"><strong>7.4.2 Visual Analysis of Seasonality with Cycle Plot</strong></a></li>
+  </ul></li>
+  <li><a href="#time-series-decomposition" id="toc-time-series-decomposition" class="nav-link" data-scroll-target="#time-series-decomposition"><strong>7.5 Time series decomposition</strong></a>
+  <ul class="collapse">
+  <li><a href="#single-time-series-decomposition" id="toc-single-time-series-decomposition" class="nav-link" data-scroll-target="#single-time-series-decomposition"><strong>7.5.1 Single time series decomposition</strong></a></li>
+  <li><a href="#multiple-time-series-decomposition" id="toc-multiple-time-series-decomposition" class="nav-link" data-scroll-target="#multiple-time-series-decomposition"><strong>7.5.2 Multiple time-series decomposition</strong></a></li>
+  </ul></li>
+  <li><a href="#visual-forecasting" id="toc-visual-forecasting" class="nav-link" data-scroll-target="#visual-forecasting"><strong>7.7 Visual Forecasting</strong></a>
+  <ul class="collapse">
+  <li><a href="#time-series-data-sampling" id="toc-time-series-data-sampling" class="nav-link" data-scroll-target="#time-series-data-sampling"><strong>7.7.1 Time Series Data Sampling</strong></a></li>
+  <li><a href="#exploratory-data-analysis-eda-time-series-data" id="toc-exploratory-data-analysis-eda-time-series-data" class="nav-link" data-scroll-target="#exploratory-data-analysis-eda-time-series-data"><strong>7.7.2 Exploratory Data Analysis (EDA): Time Series Data</strong></a></li>
+  <li><a href="#step-5-forecasting-future-values" id="toc-step-5-forecasting-future-values" class="nav-link" data-scroll-target="#step-5-forecasting-future-values"><strong>7.7.8 Step 5: Forecasting future values</strong></a></li>
+  <li><a href="#fitting-ets-automatically" id="toc-fitting-ets-automatically" class="nav-link" data-scroll-target="#fitting-ets-automatically"><strong>7.7.9 Fitting ETS Automatically</strong></a></li>
+  <li><a href="#fitting-fitting-ets-automatically" id="toc-fitting-fitting-ets-automatically" class="nav-link" data-scroll-target="#fitting-fitting-ets-automatically"><strong>7.7.10 Fitting Fitting ETS Automatically</strong></a></li>
   </ul></li>
   </ul>
 </nav>
@@ -331,6 +355,306 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 [4,]  3018        4902  1503        5434          35771     56514        7560
 [5,]  2165        4397  1365        4427          24464     57808        9090
 [6,]  2022        4166  1446        3359          22473     63350        9681</code></pre>
+</div>
+</div>
+</section>
+<section id="converting-tibble-object-to-tsibble-object" class="level3">
+<h3 class="anchored" data-anchor-id="converting-tibble-object-to-tsibble-object"><strong>7.2.4 Converting <code>tibble</code> object to <code>tsibble</code> object</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ts_tsibble <span class="ot">&lt;-</span> ts_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Month =</span> <span class="fu">yearmonth</span>(<span class="st">`</span><span class="at">Month-Year</span><span class="st">`</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tsibble</span>(<span class="at">index =</span> <span class="st">`</span><span class="at">Month</span><span class="st">`</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="visualising-time-series-data" class="level2">
+<h2 class="anchored" data-anchor-id="visualising-time-series-data"><strong>7.3 Visualising Time-series Data</strong></h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ts_longer <span class="ot">&lt;-</span> ts_data <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">34</span>),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">"Country"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">"Arrivals"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="visualising-single-time-series-ggplot2-methods" class="level3">
+<h3 class="anchored" data-anchor-id="visualising-single-time-series-ggplot2-methods"><strong>7.3.1 Visualising single time-series: ggplot2 methods</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>ts_longer <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Country <span class="sc">==</span> <span class="st">"Vietnam"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="st">`</span><span class="at">Month-Year</span><span class="st">`</span>, </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> Arrivals))<span class="sc">+</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ts_longer <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Country <span class="sc">==</span> <span class="st">"Malaysia"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="st">`</span><span class="at">Month-Year</span><span class="st">`</span>, </span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> Arrivals))<span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>ts_longer <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Country <span class="sc">==</span> <span class="st">"Myanmar"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="st">`</span><span class="at">Month-Year</span><span class="st">`</span>, </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> Arrivals))<span class="sc">+</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">0.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="plotting-multiple-time-series-data-with-ggplot2-methods" class="level3">
+<h3 class="anchored" data-anchor-id="plotting-multiple-time-series-data-with-ggplot2-methods"><strong>9.3.2 Plotting multiple time-series data with ggplot2 methods</strong></h3>
+<p>very hard to see</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> ts_longer, </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>       <span class="fu">aes</span>(<span class="at">x =</span> <span class="st">`</span><span class="at">Month-Year</span><span class="st">`</span>, </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>           <span class="at">y =</span> Arrivals,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">color =</span> Country))<span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>, </span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">legend.box.spacing =</span> <span class="fu">unit</span>(<span class="fl">0.5</span>, <span class="st">"cm"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In order to provide effective comparison,&nbsp;<a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html"><code>facet_wrap()</code></a>&nbsp;of&nbsp;<strong>ggplot2</strong>&nbsp;package is used to create small multiple line graph also known as trellis plot.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="visual-analysis-of-seasonality-with-cycle-plot" class="level3">
+<h3 class="anchored" data-anchor-id="visual-analysis-of-seasonality-with-cycle-plot"><strong>7.4.2 Visual Analysis of Seasonality with Cycle Plot</strong></h3>
+<p>In the code chunk below, cycle plots using&nbsp;<a href="https://feasts.tidyverts.org/reference/gg_subseries.html"><code>gg_subseries()</code></a>&nbsp;of feasts package are created. Notice that the cycle plots show not only seasonal patterns but also trend.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>tsibble_longer <span class="ot">&lt;-</span> ts_tsibble <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">34</span>),</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">"Country"</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">"Arrivals"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>tsibble_longer <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Country <span class="sc">==</span> <span class="st">"Vietnam"</span> <span class="sc">|</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>         Country <span class="sc">==</span> <span class="st">"Italy"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gg_subseries</span>(Arrivals)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="time-series-decomposition" class="level2">
+<h2 class="anchored" data-anchor-id="time-series-decomposition"><strong>7.5 Time series decomposition</strong></h2>
+<p>Time series decomposition allows us to isolate structural components such as trend and seasonality from the time-series data.</p>
+<p><img src="images/clipboard-2176589403.png" class="img-fluid" width="377"></p>
+<section id="single-time-series-decomposition" class="level3">
+<h3 class="anchored" data-anchor-id="single-time-series-decomposition"><strong>7.5.1 Single time series decomposition</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tsibble_longer <span class="sc">%&gt;%</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="st">`</span><span class="at">Country</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Vietnam"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ACF</span>(Arrivals) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="multiple-time-series-decomposition" class="level3">
+<h3 class="anchored" data-anchor-id="multiple-time-series-decomposition"><strong>7.5.2 Multiple time-series decomposition</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tsibble_longer <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="st">`</span><span class="at">Country</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Vietnam"</span> <span class="sc">|</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Country</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"Italy"</span> <span class="sc">|</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Country</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"United Kingdom"</span> <span class="sc">|</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">`</span><span class="at">Country</span><span class="st">`</span> <span class="sc">==</span> <span class="st">"China"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ACF</span>(Arrivals) <span class="sc">%&gt;%</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="visual-forecasting" class="level2">
+<h2 class="anchored" data-anchor-id="visual-forecasting"><strong>7.7 Visual Forecasting</strong></h2>
+<section id="time-series-data-sampling" class="level3">
+<h3 class="anchored" data-anchor-id="time-series-data-sampling"><strong>7.7.1 Time Series Data Sampling</strong></h3>
+<p>First, an extra column called&nbsp;<em>Type</em>&nbsp;indicating training or hold-out will be created by using&nbsp;<code>mutate()</code>&nbsp;of&nbsp;<strong>dplyr</strong>&nbsp;package. It will be extremely useful for subsequent data visualisation.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>vietnam_ts <span class="ot">&lt;-</span> tsibble_longer <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Country <span class="sc">==</span> <span class="st">"Vietnam"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Type =</span> <span class="fu">if_else</span>(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Month-Year</span><span class="st">`</span> <span class="sc">&gt;=</span> <span class="st">"2019-01-01"</span>, </span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Hold-out"</span>, <span class="st">"Training"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>vietnam_train <span class="ot">&lt;-</span> vietnam_ts <span class="sc">%&gt;%</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="st">`</span><span class="at">Month-Year</span><span class="st">`</span> <span class="sc">&lt;</span> <span class="st">"2019-01-01"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="exploratory-data-analysis-eda-time-series-data" class="level3">
+<h3 class="anchored" data-anchor-id="exploratory-data-analysis-eda-time-series-data"><strong>7.7.2 Exploratory Data Analysis (EDA): Time Series Data</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>vietnam_train <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="at">stl =</span> <span class="fu">STL</span>(Arrivals)) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">components</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="step-5-forecasting-future-values" class="level3">
+<h3 class="anchored" data-anchor-id="step-5-forecasting-future-values"><strong>7.7.8 Step 5: Forecasting future values</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>fit_ETS <span class="ot">&lt;-</span> vietnam_train <span class="sc">%&gt;%</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="st">`</span><span class="at">SES</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">ETS</span>(Arrivals <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">trend</span>(<span class="st">"N"</span>) <span class="sc">+</span> </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">`</span><span class="at">Holt</span><span class="st">`</span><span class="ot">=</span> <span class="fu">ETS</span>(Arrivals <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">trend</span>(<span class="st">"A"</span>) <span class="sc">+</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">`</span><span class="at">damped Holt</span><span class="st">`</span> <span class="ot">=</span> </span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>          <span class="fu">ETS</span>(Arrivals <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>                <span class="fu">trend</span>(<span class="st">"Ad"</span>) <span class="sc">+</span> </span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>                <span class="fu">season</span>(<span class="st">"N"</span>)),</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">`</span><span class="at">WH_A</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">ETS</span>(</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>          Arrivals <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"A"</span>) <span class="sc">+</span> </span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>            <span class="fu">trend</span>(<span class="st">"A"</span>) <span class="sc">+</span> </span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>            <span class="fu">season</span>(<span class="st">"A"</span>)),</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">`</span><span class="at">WH_M</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">ETS</span>(Arrivals <span class="sc">~</span> <span class="fu">error</span>(<span class="st">"M"</span>) </span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>                         <span class="sc">+</span> <span class="fu">trend</span>(<span class="st">"A"</span>) </span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>                         <span class="sc">+</span> <span class="fu">season</span>(<span class="st">"M"</span>))</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fit_ETS <span class="sc">%&gt;%</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tidy</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 45 × 4
+   Country .model      term      estimate
+   &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;        &lt;dbl&gt;
+ 1 Vietnam SES         alpha     1.00    
+ 2 Vietnam SES         l[0]  10313.      
+ 3 Vietnam Holt        alpha     1.00    
+ 4 Vietnam Holt        beta      0.000100
+ 5 Vietnam Holt        l[0]  13673.      
+ 6 Vietnam Holt        b[0]    526.      
+ 7 Vietnam damped Holt alpha     1.00    
+ 8 Vietnam damped Holt beta      0.000110
+ 9 Vietnam damped Holt phi       0.978   
+10 Vietnam damped Holt l[0]  13257.      
+# ℹ 35 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>fit_ETS <span class="sc">%&gt;%</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">report</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 10
+  Country .model       sigma2 log_lik   AIC  AICc   BIC       MSE   AMSE     MAE
+  &lt;chr&gt;   &lt;chr&gt;         &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+1 Vietnam SES         2.79e+7  -1453. 2912. 2912. 2920. 27515844. 5.99e7 3.91e+3
+2 Vietnam Holt        2.86e+7  -1453. 2917. 2917. 2931. 27718599. 6.03e7 3.92e+3
+3 Vietnam damped Holt 2.86e+7  -1453. 2918. 2919. 2935. 27556629. 5.97e7 3.92e+3
+4 Vietnam WH_A        5.33e+6  -1336. 2706. 2711. 2755.  4684271. 8.56e6 1.72e+3
+5 Vietnam WH_M        4.55e-3  -1300. 2635. 2640. 2684.  3046059. 3.42e6 5.20e-2</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>fit_ETS <span class="sc">%&gt;%</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">forecast</span>(<span class="at">h =</span> <span class="st">"12 months"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autoplot</span>(vietnam_ts, </span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">level =</span> <span class="cn">NULL</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-23-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="fitting-ets-automatically" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-ets-automatically"><strong>7.7.9 Fitting ETS Automatically</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>fit_autoETS <span class="ot">&lt;-</span> vietnam_train <span class="sc">%&gt;%</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">model</span>(<span class="fu">ETS</span>(Arrivals))</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>fit_autoETS <span class="sc">%&gt;%</span> <span class="fu">report</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Series: Arrivals 
+Model: ETS(M,A,M) 
+  Smoothing parameters:
+    alpha = 0.1613503 
+    beta  = 0.0001021811 
+    gamma = 0.0001030996 
+
+  Initial states:
+     l[0]     b[0]      s[0]     s[-1]     s[-2]     s[-3]    s[-4]    s[-5]
+ 15001.12 212.3552 0.9167302 0.8311728 0.8739287 0.8690543 1.104668 1.485584
+    s[-6]     s[-7]    s[-8]     s[-9]    s[-10]    s[-11]
+ 1.311207 0.9917759 1.014187 0.8973028 0.8816768 0.8227129
+
+  sigma^2:  0.0046
+
+     AIC     AICc      BIC 
+2634.751 2640.119 2683.759 </code></pre>
+</div>
+</div>
+</section>
+<section id="fitting-fitting-ets-automatically" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-fitting-ets-automatically"><strong>7.7.10 Fitting Fitting ETS Automatically</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gg_tsresiduals</span>(fit_autoETS)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="In-class_Ex07_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
 </div>
 </div>
 
