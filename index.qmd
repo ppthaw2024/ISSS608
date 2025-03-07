@@ -4,7 +4,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-### **Hello and welcome!** 🎉
+### **Hello and** ![](images/anh-dong-welcome-cute-de-thuong_075923337.gif){width="76" height="76"}
 
 ![](images/Screenshot%202025-01-11%20140219.png)
 
