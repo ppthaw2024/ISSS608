@@ -523,7 +523,7 @@ ggplot(data = re_ex_v4,
 ```
 
 
-## 6. Key Takeaways
+
 
 ## 7. Reference
 
