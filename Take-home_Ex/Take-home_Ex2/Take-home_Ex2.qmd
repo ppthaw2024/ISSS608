@@ -9,4 +9,524 @@ execute:
   freeze: true
 ---
 
-hihihi
+# **Take-home Exercise 2: Be Tradewise or Otherwise**
+
+## 1. Overview
+
+### 1.1 Setting the scene
+
+Since Mr. Donald Trump took office as the President of the United States on January 20, 2025, one of the most closely watched topics has been global trade. As a visual analytics novice,I am eager to apply newly acquired techniques to explore and analyze the changing trends and patterns of Singapore’s international trade since 2015.
+
+### 1.2 Critics on Three Visualizations
+
+In Take-home Exercise 2, the focus is on redesigning and enhancing an existing data visualization created by a peer, with a particular emphasis on Singapore's merchandise trade by region/market from the Department of Statistics Singapore (DOS). The task involves analyzing and critiquing the original visualization based on clarity and aesthetics, identifying areas for improvement.
+
+Using data visualization design principles, we will consider both clarity and aesthetic aspects. The goal is to transform the original visualization into a more effective, engaging, and insightful representation of the data, enhancing clarity, insightfulness, and user engagement.
+
+All the visualizations for this exercise will be sourced from [SingStat’s Merchandise Trade data](https://www.singstat.gov.sg/find-data/search-by-theme/trade-and-investment/merchandise-trade/latest-data).
+
+## **2. Getting Started**
+
+### **2.1 Installing and loading the required libraries**
+
+-   [tidyverse](https://www.tidyverse.org/): (i.e. readr, tidyr, dplyr, ggplot2) for performing data science tasks such as importing, tidying, and wrangling data, as well as creating graphics based on The Grammar of Graphics,
+
+-   [reshape2](https://seananderson.ca/2013/10/19/reshape/) for transforming data between wide and long formats
+
+-   [ggthemes](https://ggplot2.tidyverse.org/reference/ggtheme.html): provides some extra themes, geoms, and scales for ‘ggplot2’.
+
+-   [ggdist](https://mjskay.github.io/ggdist/): a ggplot2 extension specially designed for visualising distribution and uncertainty
+
+-   [patchwork](https://patchwork.data-imaginist.com/): an R package for preparing composite figure created using ggplot2.
+
+-   [ggridges](https://cran.r-project.org/web/packages/ggridges/vignettes/introduction.html): a ggplot2 extension specially designed for plotting [ridgeline plots](https://www.data-to-viz.com/graph/ridgeline.html).
+
+-   [ggrepel](https://ggrepel.slowkow.com/): an R package which provides geoms for ggplot2 to repel overlapping text labels.
+
+-   [tsibble](tisbble): for building static html table to aid us in having a better view of tables
+
+-   [lubridate](https://cran.r-project.org/web/packages/lubridate/): R package that makes it easier to work with dates and times.
+
+-   [patchwork](https://cran.r-project.org/web/packages/patchwork/): an R package for preparing composite figure created using ggplot2.
+
+The following code chunk utilizes the **`p_load()`** function from the **`pacman`** package to verify whether the specified packages are already installed on the system. If the packages are detected, they will be loaded into the **R environment**. Otherwise, the function will automatically install them before proceeding with the loading process.
+
+```{r}
+pacman::p_load(readxl,tidyverse, reshape2, ggthemes,
+               ggdist, patchwork, ggridges,
+               ggrepel, knitr, scales, lubridate,
+               patchwork,ggplot2,plotly,dplyr,tsibble)
+```
+
+## 3. Data Wrangling
+
+### 3.1 Importing data
+
+The dataset used in the exercise is in Excel format, retrieved from the Department of Statistics Singapore [website](https://www.singstat.gov.sg/find-data/search-by-theme/trade-and-investment/merchandise-trade/latest-data).
+
+The code chunk below import the dataset using `read_excel()` function of the haven package.
+
+```{r}
+library(readxl) 
+Trade1 <- read_excel("data/OutputFile.xlsx", sheet = 'T1')
+```
+
+```{r}
+
+Trade1 <- read_excel("data/OutputFile.xlsx", sheet='T1',col_types="text")
+Region1 <- read_excel("data/Region.xlsx", sheet = 'T1')
+Region2 <- read_excel("data/Region.xlsx", sheet = 'T2')
+Region3 <- read_excel("data/Region.xlsx", sheet = 'T3')
+NonOil <- read_excel("data/OutputFile.xlsx", sheet='T1',col_types="text")
+```
+
+## 4. Data Visualization Makeover
+
+### 4.1 TOTAL MERCHANDISE TRADE **AT CURRENT PRICES, 2020 - 2024**
+
+![](images/clipboard-2359386489.png){width="317"}
+
+The "Total Merchandise Trade at Current Prices" visualization on Singapore's Department of Statistics website provides a snapshot of the country's trade performance. Here's an analysis of its strengths and areas for improvement:​
+
+**Pros:**
+
+-   **Clear Representation of Trade Values:** The visualization effectively displays total trade figures, offering a straightforward understanding of Singapore's merchandise trade volume.​
+
+-   **Use of Current Prices:** Presenting data at current prices reflects the actual trade values during the reported period, incorporating the effects of inflation and providing a realistic economic picture.​
+
+**Cons:**
+
+-   **Lack of Historical Context:**The visualization focuses on a single time point without showing trends over time, making it challenging to assess growth patterns or identify cyclical behaviors.​
+
+-   **Heavily Text Based:** The visualization is heavily text-based, making it hard to grasp trends at a glance.
+
+#### i. Data Preparation
+
+```{r}
+head(Trade1)
+```
+
+**ii. Checking Missing Values**
+
+```{r}
+colSums(is.na(Trade1))
+
+```
+
+#### iii. Reshaping the Data Using pivot_longer()
+
+```{r}
+colnames(Trade1) <- as.character(colnames(Trade1))
+
+CommodityCurrent <- Trade1 %>%
+  pivot_longer(cols = -`Data Series`, names_to = "Year_Month", values_to = "Trade_Value") %>%
+  mutate(Trade_Value = suppressWarnings(as.numeric(Trade_Value))) 
+```
+
+```{r}
+head(CommodityCurrent)
+```
+
+**iv. Filtering the year 2020-2024**
+
+```{r}
+Commodity_C_Total <- CommodityCurrent %>%
+  filter(`Data Series` %in% c("Total Merchandise Imports, (At Current Prices)", "Total Merchandise Exports, (At Current Prices)", "Total Merchandise Trade, (At Current Prices)"))
+```
+
+```{r}
+
+Commodity_C_Total <- Commodity_C_Total %>%
+  mutate(Year = year(parse_date_time(Year_Month, orders = "ym"))) %>%
+  filter(Year >= 2020 & Year <= 2024) %>%
+  group_by(Year, `Data Series`) %>%
+  summarise(Total_Trade_Value = sum(Trade_Value, na.rm = TRUE), .groups = "drop")  
+```
+
+```{r}
+head(Commodity_C_Total)
+```
+
+#### Makeover of **TOTAL MERCHANDISE TRADE AT CURRENT PRICE 2020-2014**
+
+```{r}
+library(ggplot2) 
+library(plotly)
+library(scales)
+
+p <- ggplot(Commodity_C_Total, aes(x = Year, y = Total_Trade_Value / 1e6, color = `Data Series`, group = `Data Series`, text = paste("Year:", Year, "<br>", "Trade Type:", `Data Series`, "<br>", "Trade Value: S$", scales::comma(Total_Trade_Value / 1e6), "B"))) + 
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  theme_minimal() +
+  labs(title = "Yearly Trend of Merchandise Trade (2020-2024)",
+       x = "Year",
+       y = "Trade Value (S$ Billion)",
+       color = "Trade Type") +
+  scale_x_continuous(breaks = seq(2020, 2024, 1)) +
+  scale_y_continuous(labels = label_number(scale = 1))  
+
+ggplotly(p, tooltip = "text") 
+```
+
+### 4.2 **Merchandise Trade Performance with Major Trading Partners (2024)**
+
+![](images/clipboard-1613334989.png){width="446"}
+
+**Pros:**
+
+-   **Efficient Space Utilization:** The compact nature of a bubble chart allows multiple data points to be displayed in a small area without requiring an extensive table.
+
+-   **Quickly Highlights Key Trade Partners:** The bubble chart makes it easy to identify which countries have the largest trade volumes with Singapore at a glance. Larger bubbles automatically draw attention to major trading partners, emphasizing total trade activity.
+
+-   **Intuitive Representation of Trade Imbalance:** The position of bubbles in different regions visually distinguishes between partners with a trade surplus (more exports) and those with a trade deficit (more imports).
+
+**Cons:**
+
+-   **Overcrowding with Multiple Data Points:** If there are too many trading partners displayed, the bubbles can overlap excessively, making it difficult to differentiate individual partners.
+
+-   **Potential for Misleading Perceptions:** If not scaled correctly, the difference between bubble sizes may exaggerate or understate actual trade disparities.
+
+-   **Not Suitable for Precise Numerical Analysis:** Unlike bar charts or tables, bubble charts do not provide precise export/import values, which may be necessary for detailed analysis.
+
+**i. Data(Preparation)**
+
+```{r}
+head(Region1)
+```
+
+```{r}
+head(Region2)
+```
+
+```{r}
+head(Region3)
+```
+
+**ii. Checking Missing Values**
+
+```{r}
+colSums(is.na(Region1))
+```
+
+```{r}
+colSums(is.na(Region2))
+```
+
+```{r}
+colSums(is.na(Region3))
+```
+
+**iii. Filtering for 2024 and Selected Trading Partners**
+
+```{r}
+Trading_Partners <- c("China", "Malaysia", "United States", 
+                      "Taiwan", "Europe", "Indonesia", "Hong Kong", 
+                      "Korea, Rep Of", "Japan", "Thailand")
+```
+
+```{r}
+Imports <- Region1 %>%
+  filter(`Data Series` %in% Trading_Partners) %>%   
+  pivot_longer(cols = -`Data Series`,               
+               names_to = "Date", 
+               values_to = "Trade_Value") %>%
+  filter(grepl("^2024", Date)) %>%   
+  mutate(Trade_Type = "Imports") 
+
+
+Exports <- bind_rows(Region2, Region3) %>%  
+  filter(`Data Series` %in% Trading_Partners) %>%
+  pivot_longer(cols = -`Data Series`, 
+               names_to = "Date", 
+               values_to = "Trade_Value") %>%
+  filter(grepl("^2024", Date)) %>%   
+  mutate(Trade_Type = "Exports") 
+
+# Combine Imports and Exports into a single dataset
+Trade_Data <- bind_rows(Imports, Exports)
+
+
+head(Trade_Data)
+```
+
+```{r}
+# Summarize Total Trade by Country
+Trade_Summary <- Trade_Data %>%
+  group_by(`Data Series`, Trade_Type) %>%
+  summarise(Total_Trade_Value = sum(Trade_Value, na.rm = TRUE)) %>%
+  pivot_wider(names_from = Trade_Type, values_from = Total_Trade_Value) %>%
+  mutate(Total_Trade = Exports + Imports,  
+         Trade_Balance = Exports - Imports)  # Surplus (+) or Deficit (-)
+
+
+colnames(Trade_Summary) <- c("Country", "Exports", "Imports", "Total_Trade", "Trade_Balance")
+
+
+head(Trade_Summary)
+
+```
+
+```{r}
+
+
+p <- ggplot(Trade_Summary, aes(x = Imports, y = Exports, size = Total_Trade, fill = Trade_Balance)) +
+ 
+  geom_point(shape = 21, alpha = 0.7, color = "black") +  
+  geom_text(aes(label = Country), size = 3.5, fontface = "bold", color = "black") +
+
+  scale_x_continuous(labels = scales::comma_format(), limits = c(0, max(Trade_Summary$Imports) * 1.1)) +  
+  scale_y_continuous(labels = scales::comma_format()) +  
+
+  scale_size_continuous(range = c(6, 25), guide = "legend") +  
+  scale_fill_gradient2(low = "red", mid = "white", high = "blue", midpoint = 0, name = "Trade Balance") + 
+  
+
+  labs(title = "Merchandise Trade Performance with Major Trading Partners (2024)",
+       subtitle = "Bubble size represents total trade volume. Color indicates trade balance.",
+       x = "Imports (S$ Billion)", y = "Exports (S$ Billion)",
+       size = "Total Trade (S$ Billion)") +
+  
+   theme_minimal() +
+  theme(legend.position = "bottom",
+        panel.grid.major = element_line(color = "gray85", linetype = "dashed"),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14, face = "bold"))
+
+ggplotly(p, tooltip = c("Country", "Exports", "Imports", "Total_Trade", "Trade_Balance"))
+
+```
+
+### 4.3 NON-OIL MERCHANDISE TRADE BY MAJOR COMMODITY SECTIONS,2024
+
+![](images/clipboard-354025628.png){width="483"}
+
+Pros*:*
+
+-   Breaks down trade data by commodity sections, providing insights into the composition of trade.​
+
+-   Uses color coding to differentiate between exports and imports.​
+
+Cons*:*
+
+-   The side-by-side bar arrangement can make it challenging to compare the export and import values of each commodity directly.​
+
+-   The legend placement might require viewers to move back and forth between the chart and the legend, hindering quick comprehension.​
+
+-   After exceeding 60 Billion, the bar represented by a segmented bar as can be seen on Machinery and Transport Equipment.
+
+**i. Filtering out Non-Oil Merchandise Trade**
+
+```{r}
+
+colnames(NonOil) <- as.character(colnames(NonOil))
+
+commodity_mod <- NonOil %>%
+  pivot_longer(cols = -`Data Series`, names_to = "Year_Month", values_to = "Trade_Value") %>%
+  mutate(Trade_Value = suppressWarnings(as.numeric(Trade_Value))) 
+```
+
+```{r}
+categories <- c(
+  "Food & Live Animals [Imports]", "Beverages & Tobacco [Imports]", 
+  "Crude Materials (Excl Fuels) [Imports]", "Animal & Vegetable Oils Fats & Waxes [Imports]", 
+  "Chemicals & Chemical Products [Imports]", "Manufactured Goods [Imports]", 
+  "Machinery & Transport Equipment [Imports]", "Miscellaneous Manufactured Articles [Imports]", 
+  "Miscellaneous (Excluding Oil Bunkers) [Imports]", "Food & Live Animals [Exports]", 
+  "Beverages & Tobacco [Exports]", "Crude Materials (Excl Fuels) [Exports]", 
+  "Animal & Vegetable Oils Fats & Waxes [Exports]", "Chemicals & Chemical Products [Exports]", 
+  "Manufactured Goods [Exports]", "Machinery & Transport Equipment [Exports]", 
+  "Miscellaneous Manufactured Articles [Exports]", "Miscellaneous (Excluding Oil Bunkers) [Exports]"
+)
+
+commodity_category <- commodity_mod %>%
+  filter(`Data Series` %in% categories)
+
+```
+
+```{r}
+library(dplyr)
+library(lubridate)
+
+commodity_category <- commodity_category %>%
+  mutate(
+    Year_Month = as.character(Year_Month),  # Ensure it's a character
+    Year = year(parse_date_time(Year_Month, orders = "Y b"))  # "Y b" means "2024 Jan"
+  ) %>%
+  filter(Year == 2024) %>%
+  group_by(Year, `Data Series`) %>%
+  summarise(Total_Trade_Value = sum(Trade_Value, na.rm = TRUE)) %>%
+  ungroup()
+
+
+```
+
+ii. **Separating Trade type and Commodity**
+
+```{r}
+commodity_category <- commodity_category %>%
+  separate(`Data Series`, into = c("Commodity", "Trade_Type"), sep = " \\[", remove = TRUE) %>%
+  mutate(Trade_Type = gsub("\\]", "", Trade_Type))
+
+```
+
+```{r}
+kable(head(commodity_category))
+```
+
+**Makeover**
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+## 5. Time Series Analysis from 2015 to 2024
+
+```{r}
+imports_v4 <- Region1 %>%
+  filter(`Data Series` %in% Trading_Partners) %>%   
+  pivot_longer(cols = -`Data Series`,               
+               names_to = "Date", 
+               values_to = "Trade_Value") %>%
+  mutate(Date = ym(Date)) %>%  
+  filter(year(Date) >= 2015 & year(Date) <= 2024)
+
+domestic_ex_v4 <- Region2 %>%
+  filter(`Data Series` %in% Trading_Partners) %>%   
+  pivot_longer(cols = -`Data Series`,               
+               names_to = "Date", 
+               values_to = "Trade_Value") %>%
+  mutate(Date = ym(Date)) %>%  
+  filter(year(Date) >= 2015 & year(Date) <= 2024)
+
+re_ex_v4 <- Region2 %>%
+  filter(`Data Series` %in% Trading_Partners) %>%   
+  pivot_longer(cols = -`Data Series`,               
+               names_to = "Date", 
+               values_to = "Trade_Value") %>%
+  mutate(Date = ym(Date)) %>%  
+  filter(year(Date) >= 2015 & year(Date) <= 2024)
+
+```
+
+### 5.1 Transpose the dataset and convert the tibble dataset to tsibble.
+
+```{r}
+import1 <- as.data.frame(t(Region1))
+dom_ex1 <- as.data.frame(t(Region2))
+re_ex1 <- as.data.frame(t(Region3))
+
+colnames(import1) <- import1[1, ]
+colnames(dom_ex1) <- dom_ex1[1, ]
+colnames(re_ex1) <- re_ex1[1, ]
+
+import_tp <- import1[-1, ]
+dom_ex_tp <- dom_ex1[-1, ]
+re_ex_tp <- re_ex1[-1, ]
+
+import_tp <- import_tp %>%
+  rownames_to_column(var = "Date") %>%
+  mutate(Date = as.character(Date),   
+         Date = ym(Date)) %>%         
+  filter(year(Date) >= 2015 & year(Date) <= 2024)  
+
+dom_ex_tp <- dom_ex_tp %>%
+  rownames_to_column(var = "Date") %>%
+  mutate(Date = as.character(Date), 
+         Date = ym(Date)) %>%
+  filter(year(Date) >= 2015 & year(Date) <= 2024)
+
+re_ex_tp <- re_ex_tp %>%
+  rownames_to_column(var = "Date") %>%
+  mutate(Date = as.character(Date), 
+         Date = ym(Date)) %>%
+  filter(year(Date) >= 2015 & year(Date) <= 2024)
+```
+
+```{r}
+import_tsibble <- import_tp %>%
+  mutate(Month = yearmonth(Date)) %>%
+  as_tsibble(index = `Month`)
+
+dom_ex_tsibble <- dom_ex_tp %>%
+  mutate(Month = yearmonth(Date)) %>%
+  as_tsibble(index = `Month`)
+
+re_ex_tsibble <- re_ex_tp %>%
+  mutate(Month = yearmonth(Date)) %>%
+  as_tsibble(index = `Month`)
+```
+
+```{r}
+import_longer <- import_tsibble %>%
+  pivot_longer(cols = all_of(Trading_Partners),  
+               names_to = "Country",
+               values_to = "Trade_Value")
+
+dom_ex_longer <- dom_ex_tsibble %>%
+  pivot_longer(cols = all_of(Trading_Partners),  
+               names_to = "Country",
+               values_to = "Trade_Value")
+
+re_ex_longer <- re_ex_tsibble %>%
+  pivot_longer(cols = all_of(Trading_Partners),  
+               names_to = "Country",
+               values_to = "Trade_Value")
+```
+
+### 5.2 Visualisation
+
+```{r}
+ggplot(data = imports_v4, 
+       aes(x = Date, 
+           y = Trade_Value/1e3,
+           color = `Data Series`))+
+  geom_line(linewidth = 0.5) +
+  theme(legend.position = "bottom", 
+        legend.box.spacing = unit(0.5, "cm")) +
+  labs(title = "Major Import Partners",
+       x = "",
+       y = "Trade Value (S$ Billion)",
+       color = "Country")
+```
+
+```{r}
+ggplot(data = domestic_ex_v4, 
+       aes(x = Date, 
+           y = Trade_Value/1e3,
+           color = `Data Series`))+
+  geom_line(linewidth = 0.5) +
+  theme(legend.position = "bottom", 
+        legend.box.spacing = unit(0.5, "cm")) +
+  labs(title = "Major Domestic Export Partners",
+       x = "",
+       y = "Trade Value (S$ Billion)",
+       color = "Country")
+```
+
+```{r}
+ggplot(data = re_ex_v4, 
+       aes(x = Date, 
+           y = Trade_Value/1e3,
+           color = `Data Series`))+
+  geom_line(linewidth = 0.5) +
+  theme(legend.position = "bottom", 
+        legend.box.spacing = unit(0.5, "cm")) +
+  labs(title = "Major Re-Export Partners",
+       x = "",
+       y = "Trade Value (S$ Billion)",
+       color = "Country")
+```
+
+
+## 6. Key Takeaways
+
+## 7. Reference
+
+<https://ggplot2.tidyverse.org/reference/geom_boxplot.html>
+
+<https://ggplot2.tidyverse.org/reference/position_dodge.html>
