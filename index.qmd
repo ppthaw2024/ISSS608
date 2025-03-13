@@ -1,14 +1,14 @@
 ---
-title: "ISSS608"
+title: ""
 editor_options: 
   chunk_output_type: console
 ---
 
 ### **Hello and** ![](images/anh-dong-welcome-cute-de-thuong_075923337.gif){width="76" height="76"}
 
-![](images/Screenshot%202025-01-11%20140219.png)
+![](images/home page_studioghibli theme.webp)
 
-I'm **Phoo**, an aspiring **Business Analyst** with a passion for turning data into meaningful insights.
+I'm **Phoo**, an aspiring **Business Analyst** with a passion for turning data into meaningful insights and stories.
 
 This is my **Visual Analytics and Applications** showcase, where I document and share my coursework and projects for this module.
 
