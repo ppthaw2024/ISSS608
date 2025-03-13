@@ -1,1 +1,45 @@
-/* css styles */
+/* Change navbar background to lighter teal */
+.navbar {
+    background-color: #b2d8d8 !important;
+}
+
+/* Change navbar text color to bold white */
+.navbar .navbar-nav .nav-link {
+    color: white !important;
+    font-weight: bold !important;
+}
+
+/* Change navbar text color on hover */
+.navbar .navbar-nav .nav-link:hover {
+    color: lightcyan !important;
+    font-weight: bold !important;
+}
+
+/* Highlight active page */
+.navbar .navbar-nav .active > .nav-link {
+    color: yellow !important;
+    font-weight: bold !important;
+}
+
+/* Change navbar toggler button (for collapsed menu on mobile) */
+.navbar-toggler {
+    border-color: white !important;
+}
+
+/* Adjust dropdown menu background to lighter teal */
+.dropdown-menu {
+    background-color: #b2d8d8 !important;
+}
+
+/* Change dropdown menu link color to bold white */
+.dropdown-menu .dropdown-item {
+    color: white !important;
+    font-weight: bold !important;
+}
+
+/* Change dropdown menu link hover color */
+.dropdown-menu .dropdown-item:hover {
+    background-color: darkcyan !important;
+    color: lightcyan !important;
+    font-weight: bold !important;
+}

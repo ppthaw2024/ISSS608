@@ -5,43 +5,41 @@ website:
   title: "ISSS608 Coursework"
   navbar:
     left:
-      - text: "Hands-on Exercise"
-        menu:
-          - text: "Hands-on Exercise 0"
-            href: Hands-on_Ex/Hands-on_Ex00/Hands-on_Ex00.html
-          - text: "Hands-on Exercise 1"
-            href: Hands-on_Ex/Hands_on_Ex01/Hands_on_Ex01/Hands-on_Ex01.html
-          - text: "Hands-on Exercise 2"
-            href: Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02.html
-          - text: "Hands-on Exercise 3"
-            href: Hands-on_Ex/Hands-on_Ex03/Hands-on_Ex03.html
-          - text: "Hands-on Exercise 4"
-            href: Hands-on_Ex/Hands-on_Ex04/Hands-on_Ex04.html
-          - text: "Hands-on Exercise 5"
-            href: Hands-on_Ex/Hands-on_Ex05/Hands-on_Ex05.html
-          - text: "Hands-on Exercise 7"
-            href: Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html
-          - text: "Hands-on Exercise 8"
-            href: Hands-on_Ex/Hands-on_Ex08/Hands-on_Ex08.html
-
-      - text: "In-class Exercise"
-        menu:
-          - text: "In-class Exercise 1"
-            href: In-class_Ex1.html
-          - text: "In-class Exercise 4"
-            href: In_class_Ex/In-class_Ex04/In-class_Ex04.html
-          - text: "In-class Exercise 5"
-            href: In_class_Ex/In-class_Ex05/In-class_Ex05.html
-          - text: "In-class Exercise 7"
-            href: In_class_Ex/In-class_Ex07/In-class_Ex07.html
-
-      - text: "Take-home Exercise"
-        menu:
-          - text: "Take-home Exercise 1"
-            href: Take-home_Ex/Take-home_Ex1/Take_home_Ex1.html
-          - text: "Take-home Exercise 2"
-            href: Take-home_Ex/Take-home_Ex2/Take-home_Ex2.html
-
+    - text: "Hands-on Exercise"
+      menu:
+      - text: "Hands-on Exercise 0"
+        href: Hands-on_Ex/Hands-on_Ex00/Hands-on_Ex00.html
+      - text: "Hands-on Exercise 1"
+        href: Hands-on_Ex/Hands_on_Ex01/Hands_on_Ex01/Hands-on_Ex01.html
+      - text: "Hands-on Exercise 2"
+        href: Hands-on_Ex/Hands-on_Ex02/Hands-on_Ex02.html
+      - text: "Hands-on Exercise 3"
+        href: Hands-on_Ex/Hands-on_Ex03/Hands-on_Ex03.html
+      - text: "Hands-on Exercise 4"
+        href: Hands-on_Ex/Hands-on_Ex04/Hands-on_Ex04.html
+      - text: "Hands-on Exercise 5"
+        href: Hands-on_Ex/Hands-on_Ex05/Hands-on_Ex05.html
+      - text: "Hands-on Exercise 7"
+        href: Hands-on_Ex/Hands-on_Ex07/Hands-on_Ex07.html
+      - text: "Hands-on Exercise 8"
+        href: Hands-on_Ex/Hands-on_Ex08/Hands-on_Ex08.html
+     
+    - text: "In-class Exercise"
+      menu:
+      - text: "In-class Exercise 1"
+        href: In-class_Ex1.html
+      - text: "In-class Exercise 4"
+        href: In_class_Ex/In-class_Ex04/In-class_Ex04.html
+      - text: "In-class Exercise 5"
+        href: In_class_Ex/In-class_Ex05/In-class_Ex05.html
+      - text: "In-class Exercise 5"
+        href: In_class_Ex/In-class_Ex07/In-class_Ex07.html
+    - text: "Take-home Exercise"
+      menu:
+      - text: "Take-home Exercise 1"
+        href: Take-home_Ex/Take-home_Ex1/Take_home_Ex1.html
+      - text: "Take-home Exercise 2"
+        href: Take-home_Ex/Take-home_Ex2/Take-home_Ex2.html
     right:
       - href: index.qmd
         text: Home
@@ -52,31 +50,8 @@ format:
     theme:
       - cosmo
       - brand
+    css: styles.css
     toc: true
-    css: |
-      .navbar {
-          background-color: teal !important;
-      }
-
-      .navbar .navbar-nav .nav-link {
-          color: white !important;
-      }
-
-      .navbar .navbar-nav .nav-link:hover {
-          color: lightcyan !important;
-      }
-
-      .navbar .navbar-nav .active > .nav-link {
-          color: yellow !important;
-      }
-
-      .navbar .form-control {
-          background-color: white;
-          color: black;
-      }
-
-      .navbar-toggler {
-          border-color: white !important;
-      }
 
 editor: visual
+
