@@ -40,6 +40,8 @@ website:
         href: Take-home_Ex/Take-home_Ex1/Take_home_Ex1.html
       - text: "Take-home Exercise 2"
         href: Take-home_Ex/Take-home_Ex2/Take-home_Ex2.html
+    - text: "WeatherXplore Project"
+      href: In-class_Ex1.html
     right:
       - href: index.qmd
         text: Home
