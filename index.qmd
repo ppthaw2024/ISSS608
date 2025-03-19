@@ -6,7 +6,7 @@ editor_options:
 
 ### **Hello and** ![](images/anh-dong-welcome-cute-de-thuong_075923337.gif){width="76" height="76"}
 
-![](images/home page_studioghibli theme.webp)
+![](images/home%20page_studioghibli%20theme.webp)
 
 I'm **Phoo**, an aspiring **Business Analyst** with a passion for turning data into meaningful insights and stories.
 

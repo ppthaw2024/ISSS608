@@ -446,7 +446,7 @@ sgpools_sf <- st_as_sf(sgpools,
 list(sgpools_sf)
 ```
 
-## 8.2  **Drawing Proportional Symbol Map**
+## 8.2 **Drawing Proportional Symbol Map**
 
 ```{r}
 tmap_mode("view")
