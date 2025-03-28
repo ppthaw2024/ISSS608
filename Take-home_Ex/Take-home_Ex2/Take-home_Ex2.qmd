@@ -522,9 +522,6 @@ ggplot(data = re_ex_v4,
        color = "Country")
 ```
 
-
-
-
 ## 7. Reference
 
 <https://ggplot2.tidyverse.org/reference/geom_boxplot.html>

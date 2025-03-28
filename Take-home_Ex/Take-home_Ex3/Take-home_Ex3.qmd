@@ -1,0 +1,836 @@
+---
+title: "Take_Home Exercise 3: Prototyping Modules for Visual Analytics Shiny Application"
+author: "Pwint Phoo Thaw"
+date-modified: "last-modified"
+execute:
+  echo: true
+  eva: true
+  warning: false
+  freeze: true
+---
+
+# Visualising and Analysing Time-oriented Data
+
+## 1. Overview
+
+For this take-home exercise 3, we are required to select one module from our proposed Shiny application and complete the following tasks:
+
+-   Identify and verify the R packages required for the selected module, ensuring they are available and supported on CRAN.
+
+-   Develop and test the corresponding R code to ensure it executes correctly and produces the expected results.
+
+-   Define the key parameters and outputs that will be exposed within the Shiny application interface.
+
+-   Choose suitable Shiny UI components for presenting the identified parameters and outputs.
+
+The focus for this submission will be on the **univariate forecasting** module of the application.
+
+## **2. Getting Started**
+
+### **2.1 Installing and loading the required libraries**
+
+For the purpose of this hands-on exercise, the following R packages will be used.
+
+```{r}
+pacman::p_load(tidyverse, ggplot2, tsibble, tsibbledata, fable, fabletools, feasts, 
+               plotly, DT, fable.prophet, seasonal)
+```
+
+## 3. Data Wrangling
+
+As this take-home exercise focuses on the analysis of a single module within the overall project, the data preparation process has been carried out once to maintain consistency across all team members. The shared dataset, **weather_data_updated.csv**, will be used uniformly throughout. A detailed explanation of the data preparation steps can be accessed via the provided [link](https://weatherxplore.netlify.app/data_prep).
+
+### 3.1 Importing data
+
+The processed data has been imported using **read_csv**.
+
+```{r}
+weather <- read_csv("data/weather_data_cleaned.csv")
+```
+
+```{r}
+pacman::p_load(tidyverse, naniar, lubridate, imputeTS)
+library(data.table)
+vis_miss(weather)
+```
+
+```{r}
+head(weather)
+
+```
+
+### 3.2 Convert to tsibble data frame
+
+The code chunk below converting ts_data from tibble object into tsibble object by using as_tsibble() of tsibble R package.
+
+```{r}
+weather_tsbl <- as_tsibble(weather, key = Station, index = Date)
+weather_tsbl
+```
+
+```{r}
+Station <- weather_tsbl %>% distinct(Station)
+
+datatable(Station, 
+          class= "compact",
+          rownames = FALSE,
+          width="100%", 
+          options = list(pageLength = 12,scrollX=T))
+```
+
+## 4. Section 1: Visualising Time Series Data
+
+```{r}
+selected_stations <- unique(weather_tsbl$Station)
+variable_temp <- "Mean Temperature (°C)"
+variable_rain <- "Daily Rainfall Total (mm)"
+start_date <- "2020-01-01"
+end_date <-  "2024-12-31"
+
+```
+
+::: panel-tabset
+#### Temp_Daily
+
+```{r}
+filtered_period <- weather_tsbl %>%
+  filter_index(start_date ~ end_date)
+
+filtered_period_mstn <- filtered_period  %>%
+  filter(Station %in% selected_stations) 
+
+plot_ly(filtered_period_mstn, 
+             x = ~Date, 
+             y = as.formula(paste0("~`", variable_temp, "`")), 
+             type = 'scatter', 
+             mode = 'lines', 
+             color = ~Station,
+             hoverinfo = 'text',
+             text = ~paste("<b>Station:</b>", Station,
+                           "<br><b>Date:</b>", Date,
+                           "<br><b>", variable_temp, ":</b>", filtered_period_mstn[[variable_temp]])) %>%
+  layout(title = paste(variable_temp, "by Station"),
+         xaxis = list(title = ""),
+         yaxis = list(title = "")) %>%
+
+ layout(xaxis = list(rangeslider = list(type = "date"))) 
+```
+
+#### Temp_Weekly Average
+
+The code chunk below plot line graph for weekly summarise view of the following variables: "Mean Temperature (°C)"
+
+```{r}
+summarised_temp_week <- filtered_period %>%
+  group_by_key() %>%
+  index_by(year_week = ~ yearweek(.)) %>%
+  summarise(
+    avg_temp = round(mean(.data[[variable_temp]]),2), na.rm = TRUE)
+
+summarised_temp_mstn <- summarised_temp_week  %>%
+  filter(Station %in% selected_stations) 
+```
+
+```{r}
+summarised_temp_mstn <- summarised_temp_mstn %>%
+  mutate(week_start_date = floor_date(as.Date(year_week), unit = "week"))
+
+plot_ly(summarised_temp_mstn, x = ~week_start_date, y = ~avg_temp,
+             type = 'scatter', mode = 'lines', color = ~Station,
+             hoverinfo = 'text',
+             text = ~paste("<b>Station:</b>", Station, 
+                           "<br><b>Week Starting:</b>", week_start_date, 
+                           "<br><b>Average", variable_temp, ":</b>", avg_temp)) %>%
+
+  layout(title = paste("Weekly Average", variable_temp, "by Station"),
+         xaxis = list(title = ""),
+         yaxis = list(title = "")) %>%
+  
+  layout(xaxis = list(rangeslider = list(type = "date"))) 
+
+```
+
+#### Temp_Monthly Average
+
+Line graph for monthly summarise view of the following variables: "Mean Temperature (°C)"
+
+```{r}
+summarised_temp_month <- filtered_period %>%
+  group_by_key() %>%
+  index_by(year_month = ~ yearmonth(.)) %>%
+  summarise(
+    avg_temp = round(mean(.data[[variable_temp]]),2), na.rm = TRUE)
+
+summarised_temp_mstn <- summarised_temp_month  %>%
+  filter(Station %in% selected_stations) 
+```
+
+```{r}
+summarised_temp_mstn <- summarised_temp_mstn %>%
+  mutate(month_start_date = floor_date(as.Date(year_month), unit = "month"))
+
+plot_ly(summarised_temp_mstn, x = ~month_start_date, y = ~avg_temp,
+             type = 'scatter', mode = 'lines', color = ~Station,
+             hoverinfo = 'text',
+             text = ~paste("<b>Station:</b>", Station, 
+                           "<br><b>Month:</b>", year_month, 
+                           "<br><b>Average", variable_temp, ":</b>", avg_temp)) %>%
+
+  layout(title = paste("Monthly Average", variable_temp, "by Station"),
+         xaxis = list(title = ""),
+         yaxis = list(title = "")) %>%
+  
+  layout(xaxis = list(rangeslider = list(type = "date"))) 
+
+```
+
+#### Rain_Weekly Total
+
+Variable - Daily Rainfall Total (mm) Time resolution - week
+
+```{r}
+summarised_rain_week <- filtered_period %>%
+  group_by_key() %>%
+  index_by(year_week = ~ yearweek(.)) %>%
+  summarise(
+    total_rainfall = sum(.data[[variable_rain]]), na.rm = TRUE)
+
+
+summarised_rain_mstn <- summarised_rain_week  %>%
+  filter(Station %in% selected_stations) 
+```
+
+```{r}
+summarised_rain_mstn <- summarised_rain_mstn %>%
+  mutate(week_start_date = floor_date(as.Date(year_week), unit = "week"))
+
+plot_ly(summarised_rain_mstn, x = ~week_start_date, y = ~total_rainfall,
+             type = 'scatter', mode = 'lines', color = ~Station,
+             hoverinfo = 'text',
+             text = ~paste("<b>Station:</b>", Station, 
+                           "<br><b>Week Starting:</b>", week_start_date, 
+                           "<br><b>Total rainfall :</b>", total_rainfall, "mm")) %>%
+
+  layout(title = paste("Weekly", variable_rain, "by Station"),
+         xaxis = list(title = ""),
+         yaxis = list(title = "")) %>% 
+
+  layout(xaxis = list(rangeslider = list(type = "date"))) 
+
+```
+
+#### Rain_Monthly Total
+
+Variable - Daily Rainfall Total (mm) Time resolution - Month
+
+```{r}
+summarised_rain_month <- filtered_period %>%
+  group_by_key() %>%
+  index_by(year_month = ~ yearmonth(.)) %>%
+  summarise(
+    total_rainfall = sum(.data[[variable_rain]]), na.rm = TRUE)
+
+summarised_rain_mstn <- summarised_rain_month  %>%
+  filter(Station %in% selected_stations) 
+```
+
+```{r}
+summarised_rain_mstn <- summarised_rain_mstn %>%
+  mutate(month_start_date = floor_date(as.Date(year_month), unit = "month"))
+
+plot_ly(summarised_rain_mstn, x = ~~month_start_date, y = ~total_rainfall,
+             type = 'scatter', mode = 'lines', color = ~Station,
+             hoverinfo = 'text',
+             text = ~paste("<b>Station:</b>", Station, 
+                           "<br><b>Month:</b>", year_month, 
+                           "<br><b>Total rainfall :</b>", total_rainfall, "mm")) %>%
+
+  layout(title = paste("Monthly", variable_rain, "by Station"),
+         xaxis = list(title = ""),
+         yaxis = list(title = "")) %>% 
+  
+  layout(xaxis = list(rangeslider = list(type = "date"))) 
+
+```
+:::
+
+## **5. Section 2: Time Series Decomposition and auto correlation**
+
+This section presents the **STL decomposition** method — a powerful and flexible technique for breaking down time series data into three key components: **trend**, **seasonality**, and **remainder**.
+
+**STL** stands for *Seasonal and Trend decomposition using Loess*, where **Loess** refers to a smoothing technique used to model nonlinear relationships. By applying STL, we can gain deeper insights into the underlying structure of our time series data, making it easier to interpret patterns and support accurate forecasting.
+
+The plots below illustrate STL decomposition results using various tuning parameters, demonstrating how parameter adjustments influence the decomposition outcome.
+
+### 5.1 ACF & PACF of Mean Temperature (°C)
+
+ACF Daily Mean Temperature for Different Region
+
+::: panel-tabset
+### ACF Daily_North
+
+```{r}
+single_region <- "North"
+```
+
+```{r}
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+ACF <- filtered_period_sreg_filled %>%
+  ACF(.data[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("ACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(ACF)
+
+```
+
+### ACF Daily_East
+
+```{r}
+single_region <- "East"
+```
+
+```{r}
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+ACF <- filtered_period_sreg_filled %>%
+  ACF(.data[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("ACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(ACF)
+
+```
+
+### ACF Daily_NorthEast
+
+```{r}
+single_region <- "Northeast"
+```
+
+```{r}
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+ACF <- filtered_period_sreg_filled %>%
+  ACF(.data[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("ACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(ACF)
+
+```
+
+### ACF Daily_Central
+
+```{r}
+single_region <- "Central"
+```
+
+```{r}
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+ACF <- filtered_period_sreg_filled %>%
+  ACF(.data[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("ACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(ACF)
+
+```
+
+### ACF Daily_West
+
+```{r}
+single_region <- "West"
+```
+
+```{r}
+
+# Filter data for the selected region
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+ACF <- filtered_period_sreg_filled %>%
+  ACF(.data[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("ACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(ACF)
+
+```
+:::
+
+PACF Daily Mean Temperature for differnt Region
+
+::: panel-tabset
+### PACF Daily_North
+
+```{r}
+single_region <- "North"
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+PACF <- filtered_period_sreg_filled %>%
+  PACF(filtered_period_sreg_filled[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("PACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(PACF)
+
+```
+
+### PACF Daily_East
+
+```{r}
+single_region <- "East"
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+PACF <- filtered_period_sreg_filled %>%
+  PACF(filtered_period_sreg_filled[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("PACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(PACF)
+
+```
+
+### PACF Daily_East
+
+```{r}
+single_region <- "East"
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+PACF <- filtered_period_sreg_filled %>%
+  PACF(filtered_period_sreg_filled[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("PACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(PACF)
+
+```
+
+### PACF Daily_NorthEast
+
+```{r}
+single_region <- "Northeast"
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+PACF <- filtered_period_sreg_filled %>%
+  PACF(filtered_period_sreg_filled[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("PACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(PACF)
+
+```
+
+### PACF Daily_Central
+
+```{r}
+single_region <- "Central"
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+PACF <- filtered_period_sreg_filled %>%
+  PACF(filtered_period_sreg_filled[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("PACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(PACF)
+
+```
+
+### PACF Daily_West
+
+```{r}
+
+single_region <- "West"
+
+filtered_period_sreg <- filtered_period %>%
+  filter(Region == single_region)
+
+filtered_period_sreg_filled <- filtered_period_sreg %>%
+  fill_gaps()
+
+PACF <- filtered_period_sreg_filled %>%
+  PACF(filtered_period_sreg_filled[[variable_temp]], lag_max = 100) %>%
+  autoplot() +
+  labs(title = paste("PACF plot of", variable_temp, "for Region:", single_region)) +
+  theme_minimal()
+
+ggplotly(PACF)
+
+```
+:::
+
+```{r}
+library(dplyr)
+library(tsibble)
+library(feasts)
+library(ggplot2)
+
+summarised_temp_week <- filtered_period %>%
+  index_by(week = yearweek(Date)) %>%
+  group_by(Region, week) %>%
+  summarise(avg_temp = mean(`Mean Temperature (°C)`, na.rm = TRUE), .groups = "drop")
+
+summarised_temp_week_ts <- summarised_temp_week %>%
+  as_tsibble(index = week, key = Region) %>%
+  fill_gaps()
+
+weekly_region_temp <- summarised_temp_week_ts %>%
+  filter(Region == "North")
+
+
+gg_tsdisplay(weekly_region_temp, avg_temp, plot_type = "partial") +
+  labs(title = "Weekly Mean Temperature (°C) - North Region")
+
+```
+
+### 5.2 STL Decomposition analysis
+
+STL is a robust method of time series decomposition often used in economic and environmental analyses. The STL method uses locally fitted regression models to decompose a time series into trend, seasonal, and remainder components.
+
+The STL algorithm performs smoothing on the time series using LOESS in two loops; the inner loop iterates between seasonal and trend smoothing and the outer loop minimizes the effect of outliers. During the inner loop, the seasonal component is calculated first and removed to calculate the trend component. The remainder is calculated by subtracting the seasonal and trend components from the time series.
+
+```{r}
+single_station <- "Ang Mo Kio"
+
+filtered_period_sstn <- filtered_period  %>%
+  filter(Station %in% single_station)
+
+filled_data <- filtered_period_sstn %>%
+  filter(Station == single_station) %>%
+  as_tsibble(index = Date) %>%
+  fill_gaps() %>%
+  mutate(
+    `Mean Temperature (°C)` = imputeTS::na_interpolation(`Mean Temperature (°C)`)
+  )
+```
+
+```{r}
+stl_formula_default <- STL(`Mean Temperature (°C)`)
+
+stl_formula_min <- STL(`Mean Temperature (°C)`
+                         ~ trend(window = 1) +        
+                           ~  season(window = 1))
+stl_formula_max <- STL(`Mean Temperature (°C)`
+                         ~ trend(window = 365) +        
+                           ~  season(window = 365))
+
+```
+
+Auto STL
+
+```{r}
+stl_default <- filled_data %>%
+  model(stl_formula_default) %>%
+  components() 
+
+```
+
+```{r}
+stl_default_tibble <- as_tibble(stl_default) %>%
+  select(Date, `Mean Temperature (°C)`, trend, season_week, season_year, remainder, season_adjust) %>%
+  mutate(trend = round(trend, 2),
+         season_adjust = round(season_adjust, 2),
+         season_week = round(season_week, 4),
+         season_year = round(season_year, 4),
+         remainder = round(remainder, 4))
+
+datatable(stl_default_tibble, 
+          class= "nowrap", 
+          rownames = FALSE, 
+          filter = 'top',  # Enables filters at the top of each column
+          width="100%", 
+          options = list(pageLength = 10, scrollX = TRUE))
+```
+
+```{r}
+plot_stl_default <- stl_default %>%
+  autoplot()
+
+ggplotly(plot_stl_default) %>% layout(width = 700, height = 700, 
+                      plot_bgcolor="#edf2f7")
+```
+
+## 6. Time Series Forecasting (Daily)
+
+### 6.1 Split data into training and testing
+
+```{r}
+# Define the split point; for example, keeping the first 80% of rows for training
+split_point <- nrow(filled_data) * 0.8
+
+# Create the training dataset (first 80% of the data)
+train_daily <- filled_data %>% 
+  slice(1:floor(split_point))
+
+# Create the test dataset (remaining 20% of the data)
+test_daily <- filled_data %>% 
+  slice((floor(split_point) + 1):n())
+```
+
+### **6.2 Create and fit multiple model to tesing set**
+
+```{r}
+train_daily_fit <- train_daily %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(stl_formula_default, NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(stl_formula_default, ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(stl_formula_default, ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(`Mean Temperature (°C)`),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(`Mean Temperature (°C)`),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(`Mean Temperature (°C)`)
+  )
+
+forecast_horizon <- nrow(test_daily)
+
+# Forecasting
+train_daily_fc <- forecast(train_daily_fit, h = forecast_horizon)
+
+# Plotting the forecasts
+c <- autoplot(train_daily, `Mean Temperature (°C)`) +
+  autolayer(test_daily, `Mean Temperature (°C)`, series = "Test Data") +
+  autolayer(train_daily_fc, level = NULL) +
+  labs(title = "Forecast Validation for daily mean temperature of Ang Mo Kio Station") +
+  theme_minimal() 
+
+ggplotly(c, tooltip = c("x", "y", ".model"))
+```
+
+### **6.3 Testing set forcast & Accuracy Evaluation**
+
+```{r}
+accuracy_metrics <- accuracy(train_daily_fc, test_daily) %>%
+    arrange(.model) %>%
+  select(.model, .type, RMSE, MAE, MAPE, MASE) %>%
+  mutate(across(c(RMSE, MAE, MAPE, MASE), round, 2))
+
+datatable(accuracy_metrics, 
+          class= "hover",
+          rownames = FALSE,
+          width="100%", 
+          options = list(pageLength = 10,scrollX=T))
+```
+
+#### **6.3.1 Residual plot**
+
+```{r}
+residual <- train_daily %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(stl_formula_default, NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(stl_formula_default, ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(stl_formula_default, ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(`Mean Temperature (°C)`),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(`Mean Temperature (°C)`),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(`Mean Temperature (°C)`)
+  ) %>% 
+  augment() 
+
+a <- autoplot(residual, .innov) +  
+  labs(title = "Residual Plot") +
+  theme_minimal() 
+
+ggplotly(a)
+```
+
+### **6.4 Refit to Full Dataset & Forecast Forward**
+
+```{r}
+# Refit models to the full dataset
+full_fit <-  suppressWarnings(filled_data %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(stl_formula_default, NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(stl_formula_default, ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(stl_formula_default, ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(`Mean Temperature (°C)`),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(`Mean Temperature (°C)`),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(`Mean Temperature (°C)`)
+  )
+)
+```
+
+###Forecast 1 month
+
+```{r}
+# Define forecast horizon as an integer (e.g., 30 days instead of "1 month")
+future_horizon <- 30  # Adjust this number based on your data frequency (e.g., 30 for daily, 4 for weekly)
+
+# Generate forecasts (with warning suppression if needed)
+full_forecast <- suppressWarnings(
+  forecast(full_fit, h = future_horizon)
+)
+
+```
+
+```{r}
+full_forecast_df <- as_tibble(full_forecast)
+
+full_forecast_df <- full_forecast_df %>%
+  mutate(.mean = round(.mean, 2)) %>%
+  mutate(n=n(), sd=sd(.mean)) %>%
+  mutate(se=sd/sqrt(n-1)) %>%
+  mutate(Lower = round(.mean - (1.96 * se), 2),
+         Upper = round(.mean + (1.96 * se), 2))
+```
+
+```{r}
+# Initialize an empty plotly object
+p <- plot_ly()
+
+# Unique models for iteration and color assignment
+unique_models <- unique(full_forecast_df$.model)
+colors <- RColorBrewer::brewer.pal(n = length(unique_models), name = "Set1")
+
+# Loop through each model to add to the plot
+for (i in seq_along(unique_models)) {
+    model_name <- unique_models[i]
+    
+    # Filter data for the current model
+    model_data <- filter(full_forecast_df, .model == model_name)
+    
+    # Define the custom hovertemplate for lines
+    hovertemplate_line <- paste(
+        "Date: %{x}<br>",
+        "Mean Temperature (°C): %{y:.2f}<br>",
+        "Model: ", model_name, "<br>",
+        "95% CI: [%{customdata[0]:.2f}, %{customdata[1]:.2f}]<extra></extra>"
+    )
+    
+    # Customdata for the line (lower and upper CI values)
+    custom_data <- mapply(function(lower, upper) list(lower, upper), model_data$Lower, model_data$Upper, SIMPLIFY = FALSE)
+    
+    # Add forecast line with custom tooltip and legend grouping
+    p <- add_lines(p, data = model_data, x = ~Date, y = ~`.mean`, name = model_name,
+                   line = list(color = colors[i]), hovertemplate = hovertemplate_line,
+                   customdata = custom_data, legendgroup = model_name)
+
+    # Add confidence interval ribbon with legend grouping, but no separate legend entry
+    p <- add_ribbons(p, data = model_data, x = ~Date, ymin = ~Lower, ymax = ~Upper,
+                     fillcolor = scales::alpha(colors[i], 0.2), line = list(color = "transparent"),
+                     legendgroup = model_name, showlegend = FALSE, hoverinfo = "skip")
+}
+
+# Customize layout
+p <- p %>% layout(title = "Future Forecast Plot with 95% CI for daily mean temperature of Ang Mo Kio Station",
+                  xaxis = list(title = "Date"),
+                  yaxis = list(title = "Mean Temperature (°C)"),
+                  legend = list(title = list(text = 'Model')),
+                  hovermode = 'closest')
+
+# Display the plot
+p
+```
+
+```{r}
+# Table view
+col<- full_forecast_df %>% 
+  select(.model, Date, .mean) %>% 
+  rename(Forecast = .mean) %>%
+  mutate(Forecast = round(Forecast, 2),
+         .model = as.factor(.model))
+
+
+datatable(col, 
+          class= "hover", 
+          rownames = FALSE, 
+          filter = 'top',  # Enables filters at the top of each column
+          width="100%", 
+          options = list(pageLength = 6, scrollX = TRUE))
+```
+
+## 7. **Time Series Forecasting \[Temperature-weekly average\]**
+
+## **8. Time Series Forecasting \[Rainfall-weekly total\]**
+
+## 

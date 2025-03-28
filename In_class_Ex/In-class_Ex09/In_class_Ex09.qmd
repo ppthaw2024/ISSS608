@@ -1,0 +1,9 @@
+title: "In-class_Ex09: 
+format: html
+date-modified: "last-modified"
+execute:
+  echo: true
+  eva: true
+  warning: false
+  freeze: true
+---
