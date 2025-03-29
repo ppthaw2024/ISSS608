@@ -17,7 +17,7 @@ variables_select <- c(
 
 # UI
 ui <- fluidPage(
-  titlePanel("Time Series Visualization of Singapore Weather"),
+  titlePanel("Time Visualization of Singapore Weather"),
   sidebarLayout(
     sidebarPanel(
       selectInput("station", "Select Station:",
