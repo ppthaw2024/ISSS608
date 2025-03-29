@@ -1,51 +1,71 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
+# Load packages
+pacman::p_load(shiny, tidyverse, lubridate, tsibble, tsibbledata)
 
-library(shiny)
+# Load data
+weather_data <- read_csv("data/weather_data_cleaned.csv")
 
-# Define UI for application that draws a histogram
-ui <- fluidPage(
+# Convert to tsibble
+weather_tsbl <- as_tsibble(weather_data, key = Station, index = Date)
 
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
-    )
+# Available variables for selection
+variables_select <- c(
+  "Daily Rainfall Total (mm)" = "Daily Rainfall Total (mm)",
+  "Mean Temperature (°C)" = "Mean Temperature (°C)",
+  "Minimum Temperature (°C)" = "Minimum Temperature (°C)",
+  "Maximum Temperature (°C)" = "Maximum Temperature (°C)"
 )
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
+# UI
+ui <- fluidPage(
+  titlePanel("Time Series Visualization of Singapore Weather"),
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("station", "Select Station:",
+                  choices = unique(weather_data$Station),
+                  selected = unique(weather_data$Station)[1]),
+      selectInput("variable", "Select Variable:", choices = variables_select),
+      dateRangeInput("daterange", "Select Date Range:",
+                     start = min(weather_data$Date),
+                     end = max(weather_data$Date),
+                     min = min(weather_data$Date),
+                     max = max(weather_data$Date)),
+      radioButtons("resolution", "Time Resolution:",
+                   choices = c("Daily" = "day", "Weekly" = "week"),
+                   selected = "day")
+    ),
+    mainPanel(
+      plotOutput("ts_plot")
+    )
+  )
+)
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+# Server
+server <- function(input, output, session) {
+  
+  selected_data <- reactive({
+    data <- weather_tsbl %>%
+      filter(Station == input$station,
+             Date >= input$daterange[1],
+             Date <= input$daterange[2])
+    
+    if (input$resolution == "week") {
+      data %>%
+        index_by(Week = ~ floor_date(., "week")) %>%
+        summarise(Value = mean(.data[[input$variable]], na.rm = TRUE))
+    } else {
+      data %>%
+        mutate(Value = .data[[input$variable]])
+    }
+  })
+  
+  output$ts_plot <- renderPlot({
+    ggplot(selected_data(), aes(x = Date, y = Value)) +
+      geom_line(color = "steelblue") +
+      labs(title = paste(input$resolution |> str_to_title(), input$variable, "at", input$station),
+           x = "Date", y = input$variable) +
+      theme_minimal()
+  })
 }
 
-# Run the application 
+# Run the app
 shinyApp(ui = ui, server = server)
