@@ -369,7 +369,6 @@ single_region <- "West"
 ```
 
 ```{r}
-
 # Filter data for the selected region
 filtered_period_sreg <- filtered_period %>%
   filter(Region == single_region)
@@ -384,7 +383,6 @@ ACF <- filtered_period_sreg_filled %>%
   theme_minimal()
 
 ggplotly(ACF)
-
 ```
 :::
 
@@ -395,27 +393,6 @@ PACF Daily Mean Temperature for differnt Region
 
 ```{r}
 single_region <- "North"
-
-filtered_period_sreg <- filtered_period %>%
-  filter(Region == single_region)
-
-filtered_period_sreg_filled <- filtered_period_sreg %>%
-  fill_gaps()
-
-PACF <- filtered_period_sreg_filled %>%
-  PACF(filtered_period_sreg_filled[[variable_temp]], lag_max = 100) %>%
-  autoplot() +
-  labs(title = paste("PACF plot of", variable_temp, "for Region:", single_region)) +
-  theme_minimal()
-
-ggplotly(PACF)
-
-```
-
-### PACF Daily_East
-
-```{r}
-single_region <- "East"
 
 filtered_period_sreg <- filtered_period %>%
   filter(Region == single_region)
@@ -520,27 +497,7 @@ ggplotly(PACF)
 :::
 
 ```{r}
-library(dplyr)
-library(tsibble)
-library(feasts)
-library(ggplot2)
-
-summarised_temp_week <- filtered_period %>%
-  index_by(week = yearweek(Date)) %>%
-  group_by(Region, week) %>%
-  summarise(avg_temp = mean(`Mean Temperature (°C)`, na.rm = TRUE), .groups = "drop")
-
-summarised_temp_week_ts <- summarised_temp_week %>%
-  as_tsibble(index = week, key = Region) %>%
-  fill_gaps()
-
-weekly_region_temp <- summarised_temp_week_ts %>%
-  filter(Region == "North")
-
-
-gg_tsdisplay(weekly_region_temp, avg_temp, plot_type = "partial") +
-  labs(title = "Weekly Mean Temperature (°C) - North Region")
-
+filtered_period
 ```
 
 ### 5.2 STL Decomposition analysis
@@ -556,7 +513,6 @@ filtered_period_sstn <- filtered_period  %>%
   filter(Station %in% single_station)
 
 filled_data <- filtered_period_sstn %>%
-  filter(Station == single_station) %>%
   as_tsibble(index = Date) %>%
   fill_gaps() %>%
   mutate(
@@ -576,7 +532,8 @@ stl_formula_max <- STL(`Mean Temperature (°C)`
 
 ```
 
-Auto STL
+::: panel-tabset
+### Auto STL
 
 ```{r}
 stl_default <- filled_data %>%
@@ -609,6 +566,75 @@ plot_stl_default <- stl_default %>%
 ggplotly(plot_stl_default) %>% layout(width = 700, height = 700, 
                       plot_bgcolor="#edf2f7")
 ```
+
+### Min STL
+
+```{r}
+stl_min <- filled_data %>%
+  model(stl_formula_min) %>%
+  components()
+```
+
+```{r}
+stl_min_tibble <- as_tibble(stl_min) %>%
+  select(Date, `Mean Temperature (°C)`, trend, season_week, season_year, remainder, season_adjust) %>%
+  mutate(trend = round(trend, 2),
+         season_adjust = round(season_adjust, 2),
+         season_week = round(season_week, 4),
+         season_year = round(season_year, 4),
+         remainder = round(remainder, 4))
+
+datatable(stl_min_tibble, 
+          class= "nowrap", 
+          rownames = FALSE, 
+          filter = 'top',  # Enables filters at the top of each column
+          width="100%", 
+          options = list(pageLength = 10, scrollX = TRUE))
+```
+
+```{r}
+plot_stl_min <- stl_min %>%
+  autoplot()
+
+ggplotly(plot_stl_min) %>% layout(width = 700, height = 700, 
+                      plot_bgcolor="#edf2f7")
+```
+
+### Max STL
+
+```{r}
+stl_max <- filled_data %>%
+  model(stl_formula_max) %>%
+  components()
+```
+
+```{r}
+stl_max_tibble <- as_tibble(stl_max) %>%
+  select(Date, `Mean Temperature (°C)`, trend, season_week, season_year, remainder, season_adjust) %>%
+  mutate(trend = round(trend, 2),
+         season_adjust = round(season_adjust, 2),
+         season_week = round(season_week, 4),
+         season_year = round(season_year, 4),
+         remainder = round(remainder, 4))
+
+datatable(stl_max_tibble, 
+          class= "nowrap", 
+          rownames = FALSE, 
+          filter = 'top',  # Enables filters at the top of each column
+          width="100%", 
+          options = list(pageLength = 10, scrollX = TRUE))
+```
+
+```{r}
+plot_stl_max <- stl_max %>%
+  autoplot()
+
+ggplotly(plot_stl_max) %>% layout(width = 700, height = 700, 
+                      plot_bgcolor="#edf2f7")
+```
+:::
+
+The STL decomposition plot is divided into four panels. The top panel displays the original time series, while the bottom three panels break it down into its individual components: trend, seasonality, and remainder. These components—when added together—reconstruct the original data shown in the top panel. The remainder represents the residuals left after removing both the seasonal and trend-cycle effects from the data.
 
 ## 6. Time Series Forecasting (Daily)
 
@@ -831,6 +857,344 @@ datatable(col,
 
 ## 7. **Time Series Forecasting \[Temperature-weekly average\]**
 
+```{r}
+summarised_temp_week
+```
+
+```{r}
+summarised_temp_week_sstn <- summarised_temp_week %>%
+  filter(Station == "Ang Mo Kio") %>%
+  as_tsibble(index = year_week) %>%
+  fill_gaps() %>%
+  mutate(
+    avg_temp = imputeTS::na_interpolation(avg_temp)
+  )
+ 
+
+```
+
+```{r}
+# Define the split point; for example, keeping the first 80% of rows for training
+split_point <- nrow(summarised_temp_week_sstn ) * 0.8
+
+# Create the training dataset (first 80% of the data)
+train_temp_week <-summarised_temp_week_sstn  %>% 
+  slice(1:floor(split_point))
+
+# Create the test dataset (remaining 20% of the data)
+test_temp_week <-summarised_temp_week_sstn  %>% 
+  slice((floor(split_point) + 1):n())
+```
+
+### **7.1 Split data into training and testing**
+
+```{r}
+train_temp_week_fit <- train_temp_week %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(STL(avg_temp), NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(STL(avg_temp), ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(STL(avg_temp), ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(avg_temp),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(avg_temp),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(avg_temp)
+  )
+
+forecast_horizon <- nrow(test_temp_week)
+
+# Forecasting
+train_temp_week_fc <- forecast(train_temp_week_fit, h = forecast_horizon)
+```
+
+```{r}
+# Plotting the forecasts
+c <- autoplot(train_temp_week, avg_temp) +
+  autolayer(test_temp_week, avg_temp, series = "Test Data") +
+  autolayer(train_temp_week_fc, level = NULL) +
+  labs(title = "Forecast Validation for weekly mean temperature of Ang Mo Kio Station") +
+  theme_minimal() 
+
+ggplotly(c, tooltip = c("x", "y", ".model"))
+```
+
+### **7.3 Testing set forecast & Accuracy Evaluation**
+
+```{r}
+accuracy_metrics <- accuracy(train_temp_week_fc, test_temp_week) %>%
+    arrange(.model) %>%
+  select(.model, .type, RMSE, MAE, MAPE, MASE) %>%
+  mutate(across(c(RMSE, MAE, MAPE, MASE), round, 2))
+
+datatable(accuracy_metrics, 
+          class= "hover",
+          rownames = FALSE,
+          width="100%", 
+          options = list(pageLength = 10,scrollX=T))
+```
+
+#### **7.3.1 Residual plot**
+
+```{r}
+residual <- train_temp_week %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(STL(avg_temp), NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(STL(avg_temp), ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(STL(avg_temp), ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(avg_temp),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(avg_temp),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(avg_temp)
+    
+  )%>% 
+  augment() 
+
+a <- autoplot(residual, .innov) +
+  labs(title = "Residual Plot") +
+  theme_minimal() 
+
+ggplotly(a)
+```
+
+### **7.4 Refit to Full Dataset & Forecast Forward**
+
+```{r}
+# Refit models to the full dataset
+full_temp_week_fit <- summarised_temp_week_sstn %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(STL(avg_temp), NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(STL(avg_temp), ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(STL(avg_temp), ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(avg_temp),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(avg_temp),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(avg_temp)
+    
+  )
+```
+
+```{r}
+# Plotting the forecasts along with the full dataset
+future_horizon <- "10 week" # Adjust this to your forecast needs
+full_temp_week_forecast <- forecast(full_temp_week_fit, h = future_horizon)
+
+```
+
+```{r}
+e <- autoplot(full_temp_week_forecast, level = 95) +
+  labs(title = "Future Forecast Plot for weekly mean temperature of Ang Mo Kio Station") +
+  theme_minimal()
+
+ggplotly(e, tooltip = c("x", "y",".model"))
+```
+
 ## **8. Time Series Forecasting \[Rainfall-weekly total\]**
 
-## 
+### **8.1 Split data into training and testing**
+
+```{r}
+summarised_rain_week
+```
+
+```{r}
+
+summarised_rain_week_sstn <- summarised_rain_week  %>%
+ filter(Station == "Ang Mo Kio") %>%
+  as_tsibble(index = year_week) %>%
+  fill_gaps() %>%
+  mutate(
+    total_rainfall = imputeTS::na_interpolation(total_rainfall)
+  )
+ 
+```
+
+```{r}
+# Define the split point; for example, keeping the first 80% of rows for training
+split_point <- nrow(summarised_rain_week_sstn) * 0.8
+
+# Create the training dataset (first 80% of the data)
+train_rain_week <- summarised_rain_week_sstn %>% 
+  slice(1:floor(split_point))
+
+# Create the test dataset (remaining 20% of the data)
+test_rain_week <- summarised_rain_week_sstn %>% 
+  slice((floor(split_point) + 1):n())
+```
+
+### **8.2 Create and fit multiple model to tesing set**
+
+```{r}
+train_rain_week_fit <- train_rain_week %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(STL(total_rainfall), NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(STL(total_rainfall), ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(STL(total_rainfall), ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(total_rainfall),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(total_rainfall),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(total_rainfall)
+  )
+
+forecast_horizon <- nrow(test_rain_week)
+
+# Forecasting
+train_rain_week_fc <- forecast(train_rain_week_fit, h = forecast_horizon)
+```
+
+```{r}
+# Plotting the forecasts
+c <- autoplot(train_rain_week, total_rainfall) +
+  autolayer(test_rain_week, total_rainfall, series = "Test Data") +
+  autolayer(train_rain_week_fc, level = NULL) +
+  labs(title = "Forecast Validation for weekly total rainfall of Ang Mo Kio Station") +
+  theme_minimal() 
+
+ggplotly(c, tooltip = c("x", "y", ".model"))
+```
+
+### **8.3 Testing set forcast & Accuracy Evaluation**
+
+```{r}
+accuracy_metrics <- accuracy(train_rain_week_fc, test_rain_week) %>%
+    arrange(.model) %>%
+  select(.model, .type, RMSE, MAE, MAPE, MASE) %>%
+  mutate(across(c(RMSE, MAE, MAPE, MASE), round, 2))
+
+datatable(accuracy_metrics, 
+          class= "hover",
+          rownames = FALSE,
+          width="100%", 
+          options = list(pageLength = 10,scrollX=T))
+```
+
+#### **8.3.1 Residual plot**
+
+```{r}
+residual <- train_rain_week %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(STL(total_rainfall), NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(STL(total_rainfall), ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(STL(total_rainfall), ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(total_rainfall),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(total_rainfall),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(total_rainfall)
+    
+  )%>% 
+  augment() 
+
+a <- autoplot(residual, .innov) +
+  labs(title = "Residual Plot") +
+  theme_minimal() 
+
+ggplotly(a)
+```
+
+### **8.4 Refit to Full Dataset & Forecast Forward**
+
+```{r}
+# Refit models to the full dataset
+full_rain_week_fit <- summarised_rain_week_sstn %>%
+  model(
+    # naïve forecast of the seasonally adjusted data
+    STLNaive = decomposition_model(STL(total_rainfall), NAIVE(season_adjust)),              
+    
+    # auto arima forecast of the seasonally adjusted data
+    STLArima = decomposition_model(STL(total_rainfall), ARIMA(season_adjust)),
+
+    # Exponential Smoothing forecast of the seasonally adjusted data
+    STLETS = decomposition_model(STL(total_rainfall), ETS(season_adjust ~ season("N"))),
+    
+    # AUTO arima
+    AUTOARIMA = ARIMA(total_rainfall),    
+    
+    # AUTO prophet
+    AUTOprophet = prophet(total_rainfall),
+    
+    # Auto Exponential smoothing
+    AUTOETS = ETS(total_rainfall)
+  )
+```
+
+```{r}
+# Plotting the forecasts along with the full dataset
+future_horizon <- "10 week" # Adjust this to your forecast needs
+full_rain_week_forecast <- forecast(full_rain_week_fit, h = future_horizon)
+```
+
+```{r}
+e <- autoplot(full_rain_week_forecast, level = 95) +
+  labs(title = "Future Forecast Plot for weekly total rainfall of Ang Mo Kio Station") +
+  theme_minimal()
+
+ggplotly(e, tooltip = c("x", "y",".model"))
+```
+
+```{r}
+full_rain_week_forecast_tibble <- as_tibble(full_rain_week_forecast)
+
+col <- full_rain_week_forecast_tibble %>% 
+  mutate(year_week = paste(year(year_week), "w", 
+                           sprintf("%02d", isoweek(year_week)), sep="")) %>%
+  select(.model, year_week, .mean) %>% 
+  rename(Forecast = .mean) %>%
+  mutate(Forecast = round(Forecast, 2),
+         .model = as.factor(.model),
+         year_week = as.factor(year_week))
+
+datatable(col, 
+          class= "hover", 
+          rownames = FALSE, 
+          filter = 'top', 
+          width="100%", 
+          options = list(pageLength = 6, scrollX = TRUE))
+```
